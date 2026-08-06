@@ -47,7 +47,7 @@ Resume_Crew/
 Clone the repository first:
 
 ```bash
-git clone https://github.com/<your-username>/Resume_Crew.git
+git clone https://github.com/VaddiMaithresh-16/Resume_Crew.git
 cd Resume_Crew
 ```
 
