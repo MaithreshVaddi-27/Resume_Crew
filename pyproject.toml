@@ -3,9 +3,9 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "resume-matcher"
-version = "1.0.0"
-description = "Grounded, local-first resume-to-job-description analysis"
+name = "resume-crew"
+version = "1.4.0"
+description = "Resume_Crew — grounded, local-first resume-to-job-description analysis"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -14,6 +14,8 @@ dependencies = [
   "python-docx==1.2.0",
   "python-dotenv==1.2.2",
   "gradio>=4.44.0",
+  "matplotlib>=3.8.0",
+  "fpdf2>=2.8.0",
   "pyngrok>=7.2.0",
 ]
 
@@ -21,7 +23,7 @@ dependencies = [
 dev = ["pytest==9.0.2"]
 
 [project.scripts]
-resume-matcher = "resume_matcher.cli:main"
+resume-crew = "resume_crew.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

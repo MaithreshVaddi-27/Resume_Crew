@@ -1,7 +1,7 @@
-"""Compatibility entry point for Resume Matcher.
+"""Compatibility entry point for Resume_Crew.
 
 Run ``python main.py`` from a source checkout, or install the package and run
-``resume-matcher``.
+``resume-crew``.
 """
 
 from pathlib import Path

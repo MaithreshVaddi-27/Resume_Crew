@@ -1,6 +1,6 @@
-# Resume Crew
+# Resume_Crew
 
-Resume Crew is a local-first application that compares a resume with a job description and creates an evidence-focused match report. It ships as both a **command-line tool** and a **Gradio web UI** with optional live ngrok sharing.
+Resume_Crew is a local-first application that compares a resume with a job description and creates an evidence-focused match report. It ships as both a **command-line tool** and a **Gradio web UI** with optional live ngrok sharing.
 
 Supports PDF, DOCX, TXT, and Markdown inputs, deterministic keyword scoring, local Ollama models, and optional Gemini analysis.
 
@@ -9,11 +9,14 @@ Supports PDF, DOCX, TXT, and Markdown inputs, deterministic keyword scoring, loc
 Each analysis creates a new report folder containing:
 
 - `match_report.md` — combined report
+- `match_report.pdf` — PDF version of the combined report, the default download format (Gradio UI only, download button on Full Report tab)
+- `match_report.docx` — Word version of the combined report, offered as a secondary download alongside the PDF
 - `resume_profile.md` — factual candidate profile
 - `job_description_profile.md` — job requirements profile
 - `skills_gap_analysis.md` — strengths, evidence gaps, and interview risks
 - `tailored_resume_bullets.md` — evidence-based bullet suggestions
 - `interview_preparation.md` — role-specific questions and honest answer guidance
+- `run_meta.json` — small sidecar (candidate, job title, score, timestamp) that powers the History tab
 
 The deterministic score is a whole-term keyword overlap signal, not an ATS simulation or hiring recommendation.
 
@@ -30,7 +33,7 @@ The hardware command works without Ollama or Gemini. Ranking now uses the LLM as
 
 ```text
 Resume_Crew/
-├── src/resume_crew/      # Application package
+├── src/resume_crew/         # Application package
 ├── tests/                   # Automated tests
 ├── samples/                 # Versioned demonstration documents
 │   ├── Resumes/              #   sample_resume.pdf
@@ -47,7 +50,7 @@ Resume_Crew/
 Clone the repository first:
 
 ```bash
-git clone https://github.com/VaddiMaithresh-16/Resume_Crew.git
+git clone https://github.com/<your-username>/Resume_Crew.git
 cd Resume_Crew
 ```
 
@@ -144,7 +147,7 @@ OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=gemma3:4b
 
 # Required only for Gemini analysis.
-GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_API_KEY=
 GEMINI_MODEL=gemini/gemini-3.1-flash-lite
 
 # Raise on slow machines (WSL2, VMs) to avoid false 'Ollama not running' errors.
@@ -156,7 +159,7 @@ GRADIO_SHARE=false
 
 # Optional: paste your ngrok authtoken here for a live public URL when using the web UI.
 # Get a free token at https://dashboard.ngrok.com/get-started/your-authtoken
-NGROK_AUTHTOKEN=your_ngrok_authtoken_here
+NGROK_AUTHTOKEN=
 ```
 
 Never commit `.env`; it is ignored by Git.
@@ -220,8 +223,12 @@ python app.py
 
 The UI opens automatically at `http://localhost:7860` and includes:
 
-- **Analyze Resume tab** — upload resume + JD, pick provider, watch step-by-step progress, view results across 7 sub-tabs (Score, Resume Profile, Job Profile, Gap Analysis, Resume Bullets, Interview Prep, Full Report)
-- **Rank Resumes tab** — score a local folder of resumes against a JD using the LLM, one scoring call per resume
+- **Analyze Resume tab** — upload resume + JD, pick provider, watch step-by-step progress, view results across 8 sub-tabs (Score, Resume Profile, Job Profile, Gap Analysis, Resume Bullets, Interview Prep, Resume Highlights, Full Report). Includes a **Cancel** button to stop a run between pipeline steps. The Full Report tab offers **PDF (default)** and **Word (.docx)** downloads of the combined report.
+- **Build Resume tab** — draft a resume tailored to a target job description, using *only* facts from an uploaded resume and/or freeform background notes you provide. Nothing is invented: no employer, date, skill, or number appears unless it's in your source material. Shows the drafted resume's keyword match score against the target job, with PDF/Word download.
+- **Rank Resumes tab** — score a local folder of resumes against a JD using the LLM, one lightweight scoring call per resume
+- **Batch Analyze tab** — run the *full* 4-step analysis (not just a score) for every resume in a folder against one JD, saving a separate report per resume
+- **Compare JDs tab** — score one resume against several job descriptions at once, to see which posting it fits best
+- **History tab** — browse past saved runs, reload any report back into the tabs, and see a score-trend chart across runs
 - **Hardware tab** — detect GPU, RAM, and Ollama status from the browser
 
 ### Live public URL via ngrok
@@ -243,6 +250,14 @@ Then run `python app.py`. A live public URL is printed in the terminal at startu
 Share this URL with anyone — no port-forwarding or VPN required.
 
 Get a free authtoken at [dashboard.ngrok.com](https://dashboard.ngrok.com/get-started/your-authtoken).
+
+**A public URL has no login by default** — anyone with the link can upload documents and run
+analysis. Set both of these in `.env` to require a username/password before the app loads:
+
+```env
+GRADIO_AUTH_USER=someuser
+GRADIO_AUTH_PASS=some-strong-password
+```
 
 ### Port and share settings
 
@@ -282,7 +297,7 @@ CrewAI execution traces and telemetry are disabled by default in `.env.example` 
 
 ```bash
 python -m pytest -q
-python -m py_compile main.py app.py src/resume_matcher/*.py
+python -m py_compile main.py app.py src/resume_crew/*.py
 python -m pip check
 ```
 

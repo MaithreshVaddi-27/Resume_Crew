@@ -60,6 +60,53 @@ def _format_keyword_chips(terms: tuple[str, ...]) -> str:
     return " ".join(f"`{term}`" for term in terms)
 
 
+def highlight_resume_matches(resume_text: str, match: KeywordMatch) -> str:
+    """Render the resume text as HTML with matched keywords highlighted.
+
+    Only matched terms are highlighted — a missing term by definition doesn't
+    appear in the resume text, so it has nothing to highlight there. Missing
+    terms are still listed separately (see format_keyword_score).
+
+    Uses the exact same TOKEN_PATTERN as tokenize()/keyword_match_score,
+    rather than a \\b-anchored alternation regex. Keyword tokens can end in
+    symbol characters TOKEN_PATTERN allows (e.g. 'c++', 'c#', 'node.js') —
+    those aren't "word" characters, so a \\b boundary right after them never
+    actually falls between a word and non-word char and silently fails to
+    match. Walking the text with the same tokenizer sidesteps that entirely.
+    """
+    import html as _html
+
+    matched_lookup = {term.lower() for term in match.matched}
+    if not matched_lookup:
+        return f"<pre style='white-space:pre-wrap'>{_html.escape(resume_text)}</pre>"
+
+    def _wrap(m: re.Match) -> str:
+        token = m.group(0)
+        normalized = token.lower().strip(".-/")
+        escaped_token = _html.escape(token)
+        if normalized in matched_lookup:
+            return (
+                "<mark style='background:#10b98155;color:inherit;border-radius:3px;"
+                f"padding:0 2px'>{escaped_token}</mark>"
+            )
+        return escaped_token
+
+    # Rebuild the output piece by piece: TOKEN_PATTERN.split keeps every
+    # non-token separator (whitespace, punctuation) untouched and unescaped
+    # here, so escape those chunks manually alongside the token substitution.
+    pieces: list[str] = []
+    pos = 0
+    for m in TOKEN_PATTERN.finditer(resume_text):
+        if m.start() > pos:
+            pieces.append(_html.escape(resume_text[pos:m.start()]))
+        pieces.append(_wrap(m))
+        pos = m.end()
+    if pos < len(resume_text):
+        pieces.append(_html.escape(resume_text[pos:]))
+
+    return f"<pre style='white-space:pre-wrap;font-family:inherit'>{''.join(pieces)}</pre>"
+
+
 def format_keyword_score(match: KeywordMatch) -> str:
     matched = _format_keyword_chips(match.matched)
     missing = _format_keyword_chips(match.missing)

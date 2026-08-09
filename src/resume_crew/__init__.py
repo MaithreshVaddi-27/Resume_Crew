@@ -1,3 +1,3 @@
-"""Resume Matcher: grounded, local-first resume and job analysis."""
+"""Resume_Crew: grounded, local-first resume and job analysis."""
 
-__version__ = "1.0.0"
+__version__ = "1.4.0"
