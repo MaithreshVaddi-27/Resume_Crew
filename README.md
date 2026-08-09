@@ -50,7 +50,7 @@ Resume_Crew/
 Clone the repository first:
 
 ```bash
-git clone https://github.com/<your-username>/Resume_Crew.git
+git clone https://github.com/VaddiMaithresh-16/Resume_Crew
 cd Resume_Crew
 ```
 
@@ -137,29 +137,48 @@ Copy-Item .env.example .env
 Important settings:
 
 ```env
-# Optional default input paths; command-line paths take precedence.
+# Copy to .env. Keep .env private; it can contain API keys and local file paths.
+#   macOS/Linux:  cp .env.example .env
+#   Windows:      Copy-Item .env.example .env
+
 RESUME_PATH=./samples/Resumes/sample_resume.pdf
 JD_PATH=./samples/Job_description/sample_job_description.pdf
 
-# auto prefers local Ollama, then configured Gemini.
+# auto uses local Ollama when reachable, then falls back to Gemini.
 LLM_PROVIDER=auto
+
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=gemma3:4b
+# Ollama connectivity timeout in seconds. Raise on slow machines or WSL2.
+OLLAMA_TIMEOUT=3.0
+# Hardware profile: auto detects CUDA > MPS > CPU.
+OLLAMA_PROFILE=auto
 
-# Required only for Gemini analysis.
+# Required only when LLM_PROVIDER=gemini or as the auto fallback when Ollama
+# is unreachable. Sends document text to Google; leave empty to stay fully local.
 GEMINI_API_KEY=
 GEMINI_MODEL=gemini/gemini-3.1-flash-lite
 
-# Raise on slow machines (WSL2, VMs) to avoid false 'Ollama not running' errors.
-OLLAMA_TIMEOUT=3.0
+CREWAI_TRACING_ENABLED=false
+CREWAI_DISABLE_TELEMETRY=true
+CREWAI_DISABLE_TRACKING=true
+OTEL_SDK_DISABLED=true
 
-# Gradio web UI server settings.
+# Local port for the web UI.
 GRADIO_PORT=7860
+# Use Gradio's built-in public tunnel instead of ngrok (true/false).
 GRADIO_SHARE=false
 
-# Optional: paste your ngrok authtoken here for a live public URL when using the web UI.
+# Optional: ngrok authtoken for a live public URL when running the Gradio app.
 # Get a free token at https://dashboard.ngrok.com/get-started/your-authtoken
-NGROK_AUTHTOKEN=
+NGROK_AUTHTOKEN=your_ngrok_authtoken
+
+# Optional but recommended if you use NGROK_AUTHTOKEN or GRADIO_SHARE: a
+# public URL has no login by default, so anyone with the link can upload
+# documents and run analysis. Set both to require a username/password.
+GRADIO_AUTH_USER=user
+GRADIO_AUTH_PASS=user@123
+
 ```
 
 Never commit `.env`; it is ignored by Git.
