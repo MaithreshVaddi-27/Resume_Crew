@@ -2,11 +2,21 @@
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 MAX_INPUT_FILE_SIZE_MB = 15
 MAX_EXTRACTED_CHARACTERS = 100_000
 SUPPORTED_DOCUMENT_EXTENSIONS = (".pdf", ".docx", ".txt", ".md")
+
+# pypdf logs benign xref-table recovery notices (e.g. "incorrect startxref
+# pointer", "parsing for Object Streams") at WARNING level for PDFs it still
+# parses successfully. Left at the default level, those lines print straight
+# to stderr ahead of our own CLI/UI output and read like a real error even
+# though extraction succeeds. We already validate the extracted text
+# ourselves (see _validate_text), so raise pypdf's own logger threshold and
+# let genuine failures surface as the ValueError/PdfReadError we catch below.
+logging.getLogger("pypdf").setLevel(logging.ERROR)
 
 
 def _validate_file(path: Path) -> None:

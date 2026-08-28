@@ -5,10 +5,7 @@ from __future__ import annotations
 import os
 import re
 import time
-from typing import TYPE_CHECKING, Any, Callable
-
-if TYPE_CHECKING:
-    from crewai import Agent, LLM, Task
+from typing import Any, Callable
 
 from .hardware import ollama_is_running
 from .scoring import KeywordMatch, format_keyword_score

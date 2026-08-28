@@ -1,4 +1,4 @@
-from resume_crew.scoring import KeywordMatch, keyword_match_score
+from resume_crew.scoring import keyword_match_score
 
 
 def test_keyword_score_uses_whole_terms() -> None:
