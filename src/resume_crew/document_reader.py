@@ -5,9 +5,11 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-MAX_INPUT_FILE_SIZE_MB = 15
-MAX_EXTRACTED_CHARACTERS = 100_000
-SUPPORTED_DOCUMENT_EXTENSIONS = (".pdf", ".docx", ".txt", ".md")
+from .config import (
+    MAX_EXTRACTED_CHARACTERS,
+    MAX_INPUT_FILE_SIZE_MB,
+    SUPPORTED_DOCUMENT_EXTENSIONS,
+)
 
 # pypdf logs benign xref-table recovery notices (e.g. "incorrect startxref
 # pointer", "parsing for Object Streams") at WARNING level for PDFs it still
@@ -26,9 +28,7 @@ def _validate_file(path: Path) -> None:
         raise ValueError(f"'{path}' is not a file.")
     size_mb = path.stat().st_size / (1024 * 1024)
     if size_mb > MAX_INPUT_FILE_SIZE_MB:
-        raise ValueError(
-            f"'{path}' is {size_mb:.1f} MB; the limit is {MAX_INPUT_FILE_SIZE_MB} MB."
-        )
+        raise ValueError(f"'{path}' is {size_mb:.1f} MB; the limit is {MAX_INPUT_FILE_SIZE_MB} MB.")
 
 
 def _validate_text(text: str, path: Path) -> str:

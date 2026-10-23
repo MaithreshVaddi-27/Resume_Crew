@@ -1,13 +1,22 @@
-"""CrewAI orchestration and Markdown report assembly for resume matching."""
+"""CrewAI orchestration and Markdown report assembly for resume matching.
+
+Agent prompts are versioned CRAFT templates loaded from
+``src/resume_crew/prompts/*.md`` so they can be edited, A/B tested, and
+audited without touching Python code.
+"""
 
 from __future__ import annotations
 
-import os
 import re
 import time
-from typing import Any, Callable
+from collections.abc import Callable
+from pathlib import Path
+from typing import Any
 
+from .config import load_settings
+from .document_reader import extract_text
 from .hardware import ollama_is_running
+from .prompts import load_prompt
 from .scoring import KeywordMatch, format_keyword_score
 
 
@@ -15,12 +24,29 @@ class AnalysisCancelled(Exception):
     """Raised from an on_step callback to abort a run between pipeline stages."""
 
 
+def _render_prompt(name: str, **variables: str) -> str:
+    """Load a CRAFT prompt template and substitute {placeholders} with source text."""
+    template = load_prompt(name)
+    for key, value in variables.items():
+        template = template.replace("{" + key + "}", value)
+    return template
+
+
 # ---------------------------------------------------------------------------
 # LLM provider selection
 # ---------------------------------------------------------------------------
 
-def build_llm(provider: str) -> tuple[Any, str]:
-    """Pick Ollama or Gemini and return ``(llm_instance, provider_name)``."""
+
+def build_llm(provider: str | None = None) -> tuple[Any, str]:
+    """Pick Ollama or Gemini and return ``(llm_instance, provider_name)``.
+
+    Reads resolved settings from :func:`config.load_settings` so provider
+    selection, model names, and base URL come from one validated source.
+    """
+    settings = load_settings()
+    settings.apply_telemetry_env()
+
+    provider = provider or settings.provider
     if provider not in {"auto", "ollama", "gemini"}:
         raise ValueError("LLM provider must be auto, ollama, or gemini.")
 
@@ -29,10 +55,10 @@ def build_llm(provider: str) -> tuple[Any, str]:
     # parsing should never require.
     from crewai import LLM
 
-    base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    ollama_model = os.getenv("OLLAMA_MODEL", "gemma3:4b")
-    gemini_model = os.getenv("GEMINI_MODEL", "gemini/gemini-3.1-flash-lite")
-    gemini_key = os.getenv("GEMINI_API_KEY")
+    base_url = settings.ollama_base_url
+    ollama_model = settings.ollama_model
+    gemini_model = settings.gemini_model
+    gemini_key = settings.gemini_api_key
 
     ollama_available = ollama_is_running(base_url)
     use_ollama = provider == "ollama" or (provider == "auto" and ollama_available)
@@ -40,21 +66,19 @@ def build_llm(provider: str) -> tuple[Any, str]:
     if use_ollama:
         if not ollama_available:
             raise RuntimeError(
-                f"Ollama is not reachable at {base_url}. "
-                f"Start Ollama and pull {ollama_model}."
+                f"Ollama is not reachable at {base_url}. Start Ollama and pull {ollama_model}."
             )
         return LLM(model=f"ollama/{ollama_model}", base_url=base_url), "ollama"
 
     if not gemini_key:
-        raise ValueError(
-            "Gemini fallback requires GEMINI_API_KEY. Configure it or start Ollama."
-        )
+        raise ValueError("Gemini fallback requires GEMINI_API_KEY. Configure it or start Ollama.")
     return LLM(model=gemini_model, api_key=gemini_key), "gemini"
 
 
 # ---------------------------------------------------------------------------
 # CrewAI agent pipeline
 # ---------------------------------------------------------------------------
+
 
 def _run_single_task(agent: Any, task: Any) -> str:
     # Explicitly disable traces for every task, even if a machine has previously
@@ -64,8 +88,11 @@ def _run_single_task(agent: Any, task: Any) -> str:
 
     set_suppress_tracing_messages(True)
     Crew(
-        agents=[agent], tasks=[task],
-        process=Process.sequential, verbose=False, tracing=False,
+        agents=[agent],
+        tasks=[task],
+        process=Process.sequential,
+        verbose=False,
+        tracing=False,
     ).kickoff()
     output = str(task.output).strip()
     if not output:
@@ -79,7 +106,7 @@ def _run_single_task_with_retry(agent: Any, task: Any, retries: int = 2) -> str:
     for attempt in range(1 + retries):
         try:
             return _run_single_task(agent, task)
-        except Exception as exc:
+        except Exception as exc:  # noqa: PERF203
             last_exc = exc
             if attempt < retries:
                 # Brief pause before retrying to avoid hammering the API.
@@ -120,18 +147,7 @@ def run_llm_analysis(
         llm,
     )
     resume_task = Task(
-        description=(
-            "Create a Markdown profile with these level-two ('## ') sections in order: "
-            "Skills, Experience, Tools, Verified Achievements. Under each heading, write "
-            "Markdown bullets in the exact form '- **Short Label:** one explanatory sentence "
-            "citing the specific evidence from the source.' Group related items under one "
-            "bold label rather than one bullet per word. Never write a bare comma-separated "
-            "list after the label (e.g. '**Languages:** Python, Java, C++') — turn it into a "
-            "full sentence that names what was built or done with them (e.g. '**Languages:** "
-            "Used Python and Java to build the RAG platform and streaming pipeline.'). Do not "
-            "include advice or facts not present in this source.\n\nRESUME SOURCE:\n"
-            + resume_text
-        ),
+        description=_render_prompt("resume_profile", resume_text=resume_text),
         expected_output=(
             "A factual Markdown resume profile using '## ' headings and "
             "'- **Label:** full explanatory sentence' bullets throughout — never a bare list."
@@ -149,17 +165,7 @@ def run_llm_analysis(
         llm,
     )
     job_task = Task(
-        description=(
-            "Create a Markdown profile with these level-two ('## ') sections in order: "
-            "Must-Have Requirements, Preferred Requirements, Seniority, Keywords. Under each "
-            "heading, write Markdown bullets in the exact form '- **Short Label:** one "
-            "explanatory sentence citing the specific requirement from the source.' Group "
-            "related items under one bold label rather than one bullet per word. Never write "
-            "a bare comma-separated list after the label — turn it into a full sentence "
-            "explaining what the requirement actually asks for. Do not include candidate "
-            "information.\n\n"
-            "JOB DESCRIPTION SOURCE:\n" + job_description_text
-        ),
+        description=_render_prompt("job_profile", job_description_text=job_description_text),
         expected_output=(
             "A factual Markdown job-requirements profile using '## ' headings and "
             "'- **Label:** full explanatory sentence' bullets throughout — never a bare list."
@@ -177,11 +183,10 @@ def run_llm_analysis(
         llm,
     )
     analysis_task = Task(
-        description=(
-            "Compare these profiles. Return Markdown sections: Strong Matches, Evidence Gaps, "
-            "and Interview Risk Areas. Every assertion must be traceable to the supplied profiles."
-            "\n\nRESUME PROFILE:\n" + resume_profile
-            + "\n\nJOB PROFILE:\n" + job_profile
+        description=_render_prompt(
+            "gap_analysis",
+            resume_profile=resume_profile,
+            job_profile=job_profile,
         ),
         expected_output="An evidence-based Markdown comparison.",
         agent=analyst,
@@ -197,17 +202,11 @@ def run_llm_analysis(
         llm,
     )
     writer_task = Task(
-        description=(
-            "Return exactly two level-two Markdown sections named 'Tailored Resume Bullets' "
-            "and 'Interview Prep Guide'. Write 3-5 revised bullets using only facts in the "
-            "resume source, each as a Markdown '- ' bullet. Write 8-10 questions as a Markdown "
-            "numbered list ('1. ', '2. ', ...), each question followed by an indented "
-            "'*Answer hint:*' line. Answer hints may suggest how to discuss verified facts or "
-            "how to honestly address a gap, but must never instruct the candidate to invent "
-            "an example. Never return a question as a bare unformatted line.\n\n"
-            "RESUME SOURCE:\n" + resume_text
-            + "\n\nJOB PROFILE:\n" + job_profile
-            + "\n\nGAP ANALYSIS:\n" + gap_analysis
+        description=_render_prompt(
+            "writer",
+            resume_text=resume_text,
+            job_profile=job_profile,
+            gap_analysis=gap_analysis,
         ),
         expected_output=(
             "Exactly the two requested Markdown sections, with bullets as '- ' items and "
@@ -220,8 +219,30 @@ def run_llm_analysis(
     return resume_profile, job_profile, gap_analysis, writer_output
 
 
+def score_resume_path(path: Path, job_text: str, llm: Any) -> tuple[str, float | None, str]:
+    try:
+        score, note = run_llm_match_score(extract_text(str(path)), job_text, llm)
+        return path.name, score, note
+    except Exception as exc:
+        return path.name, None, str(exc) or "(unknown error)"
+
+
+def format_resume_ranking(results: list[tuple[str, float | None, str]]) -> str:
+    lines = ["| Rank | Resume | Score | Notes |", "|---:|---|---:|---|"]
+    for index, (name, score, note) in enumerate(
+        sorted(results, key=lambda item: (item[1] is None, -(item[1] or 0))), 1
+    ):
+        score_text = "--" if score is None else f"{score:.0f}%"
+        safe_name = name.replace("|", "\\|")
+        safe_note = (note or "").replace("|", "\\|")
+        lines.append(f"| {index} | {safe_name} | {score_text} | {safe_note} |")
+    return "# Resume Ranking\n\n" + "\n".join(lines) + "\n"
+
+
 def run_llm_match_score(
-    resume_text: str, job_description_text: str, llm: Any,
+    resume_text: str,
+    job_description_text: str,
+    llm: Any,
 ) -> tuple[float, str]:
     """Ask the LLM for a single 0-100 match score and a short justification.
 
@@ -240,13 +261,10 @@ def run_llm_match_score(
         llm,
     )
     task = Task(
-        description=(
-            "Compare the resume to the job description and respond with EXACTLY "
-            "two lines and nothing else:\n"
-            "SCORE: <integer 0-100>\n"
-            "NOTE: <one sentence, max 25 words, on the strongest match or biggest gap>\n\n"
-            "RESUME:\n" + resume_text
-            + "\n\nJOB DESCRIPTION:\n" + job_description_text
+        description=_render_prompt(
+            "scorer",
+            resume_text=resume_text,
+            job_description_text=job_description_text,
         ),
         expected_output="Exactly two lines: 'SCORE: <int>' and 'NOTE: <text>'.",
         agent=agent,
@@ -256,7 +274,9 @@ def run_llm_match_score(
 
 
 def run_resume_builder(
-    source_text: str, job_description_text: str, llm: Any,
+    source_text: str,
+    job_description_text: str,
+    llm: Any,
 ) -> str:
     """Draft a resume tailored to a job description, using ONLY facts present
     in the candidate's own source material.
@@ -287,26 +307,10 @@ def run_resume_builder(
         llm,
     )
     task = Task(
-        description=(
-            "Using ONLY the candidate's SOURCE MATERIAL below, draft a complete, "
-            "ATS-friendly resume in Markdown, reordered and emphasized (not "
-            "invented) to suit the TARGET JOB DESCRIPTION. Use these level-two "
-            "('## ') sections, skipping any with nothing to put in them: "
-            "Professional Summary, Skills, Experience, Education, Certifications, "
-            "Achievements. Professional Summary: 2-3 sentences, only claims "
-            "the source material supports. Skills: group related skills under "
-            "'- **Label:** ...' bullets, prioritizing ones the target role "
-            "mentions, but only skills present in the source. Experience: "
-            "reverse-chronological, one '### ' heading per role using the "
-            "exact employer/title/dates from the source, with '- ' bullets "
-            "rephrased for clarity and to surface relevance to the target role "
-            "— never adding a metric, tool, or outcome the source doesn't state. "
-            "Education and Certifications: list exactly as stated in the source. "
-            "If the candidate's name or contact details appear in the source, "
-            "put them in a one-line header before the summary; otherwise omit "
-            "that line rather than inventing placeholder contact info.\n\n"
-            "SOURCE MATERIAL (candidate's own resume/notes):\n" + source_text
-            + "\n\nTARGET JOB DESCRIPTION:\n" + job_description_text
+        description=_render_prompt(
+            "resume_builder",
+            source_text=source_text,
+            job_description_text=job_description_text,
         ),
         expected_output=(
             "A complete Markdown resume using only facts present in the source "
@@ -329,6 +333,7 @@ def _parse_match_score(output: str) -> tuple[float, str]:
 # ---------------------------------------------------------------------------
 # Report assembly
 # ---------------------------------------------------------------------------
+
 
 def first_meaningful_line(text: str, fallback: str) -> str:
     for line in text.splitlines():
@@ -371,11 +376,13 @@ def split_writer_output(text: str) -> tuple[str, str]:
     bullets = re.search(
         r"^#{1,4}\s*Tailored\s+Resume\s+Bullets\s*$\n?(.*?)"
         r"(?=^#{1,4}\s*Interview\s+Prep\s+Guide\s*$|\Z)",
-        text, re.I | re.M | re.S,
+        text,
+        re.I | re.M | re.S,
     )
     interview = re.search(
         r"^#{1,4}\s*Interview\s+Prep\s+Guide\s*$\n?(.*)",
-        text, re.I | re.M | re.S,
+        text,
+        re.I | re.M | re.S,
     )
 
     # Primary pattern matched — return early.
@@ -450,7 +457,7 @@ def _add_markdown_runs(paragraph: Any, text: str) -> None:
     pos = 0
     for m in _MD_BOLD_RE.finditer(text):
         if m.start() > pos:
-            paragraph.add_run(text[pos:m.start()])
+            paragraph.add_run(text[pos : m.start()])
         bold_run = paragraph.add_run(m.group(1))
         bold_run.bold = True
         pos = m.end()
@@ -524,10 +531,21 @@ def build_docx_report(report_files: dict[str, str], candidate: str, job_title: s
 # anything else Latin-1 can't represent. A professional PDF reads better
 # without emoji clutter anyway.
 _PDF_CHAR_REPLACEMENTS = {
-    "\u2018": "'", "\u2019": "'", "\u201c": '"', "\u201d": '"',
-    "\u2013": "-", "\u2014": "-", "\u2026": "...", "\u2022": "-",
-    "\u2705": "[OK]", "\u274c": "[X]", "\u26a0": "[!]", "\ufe0f": "",
-    "\U0001f7e2": "[Strong]", "\U0001f7e1": "[Moderate]", "\U0001f534": "[Low]",
+    "\u2018": "'",
+    "\u2019": "'",
+    "\u201c": '"',
+    "\u201d": '"',
+    "\u2013": "-",
+    "\u2014": "-",
+    "\u2026": "...",
+    "\u2022": "-",
+    "\u2705": "[OK]",
+    "\u274c": "[X]",
+    "\u26a0": "[!]",
+    "\ufe0f": "",
+    "\U0001f7e2": "[Strong]",
+    "\U0001f7e1": "[Moderate]",
+    "\U0001f534": "[Low]",
 }
 
 
@@ -560,7 +578,7 @@ def markdown_to_pdf(markdown_text: str, title: str) -> bytes:
         pos = 0
         for m in _MD_BOLD_RE.finditer(line):
             if m.start() > pos:
-                pdf.write(6, _pdf_safe_text(line[pos:m.start()]))
+                pdf.write(6, _pdf_safe_text(line[pos : m.start()]))
             pdf.set_font("Helvetica", "B", size)
             pdf.write(6, _pdf_safe_text(m.group(1)))
             pdf.set_font("Helvetica", "", size)

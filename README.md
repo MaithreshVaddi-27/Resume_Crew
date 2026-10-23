@@ -98,7 +98,7 @@ Then follow the instructions for your OS below.
    python3 -m venv venv
    source venv/bin/activate
    python -m pip install --upgrade pip
-   pip install -r requirements.txt
+   pip install .
    ```
 
 3. For local (no API key) analysis, install [Ollama](https://ollama.com/download), open it once, then run:
@@ -122,7 +122,7 @@ python main.py --check-hardware
    py -m venv venv
    .\venv\Scripts\Activate.ps1
    py -m pip install --upgrade pip
-   pip install -r requirements.txt
+   pip install .
    ```
 
    If PowerShell blocks activation with an execution-policy error, run this once in the same window, then activate again:
@@ -158,7 +158,7 @@ Then install the project:
 python3 -m venv venv
 source venv/bin/activate
 python -m pip install --upgrade pip
-pip install -r requirements.txt
+pip install .
 ```
 
 For local (no API key) analysis, install [Ollama](https://ollama.com/download/linux) using its official install script, then pull a model:
@@ -356,7 +356,7 @@ CrewAI execution traces and telemetry are disabled by default, both in `.env.exa
 
 | Problem | Resolution |
 |---|---|
-| `ModuleNotFoundError` on startup | Activate the project virtual environment and run `pip install -r requirements.txt`. |
+| `ModuleNotFoundError` on startup | Activate the project virtual environment and run `pip install .`. |
 | `Ollama is not reachable` | Start the Ollama application/service, run `ollama pull gemma3:4b`, then retry. Raise `OLLAMA_TIMEOUT` in `.env` if on a slow machine. |
 | Gemini fallback error | Add a valid `GEMINI_API_KEY` to `.env` (see [Getting an API key](#getting-an-api-key-optional--only-for-gemini)), or use `--provider ollama`. |
 | PDF has no extractable text | The PDF is likely scanned. Run OCR first, then supply the OCR result. |
@@ -369,6 +369,8 @@ CrewAI execution traces and telemetry are disabled by default, both in `.env.exa
 | `python app.py` fails with `DLL load failed... Application Control policy has blocked this file` (Windows) | A managed/corporate Windows security policy (WDAC/AppLocker) is blocking a native DLL — usually pandas, pulled in by Gradio — often because the project folder still has the "downloaded from the internet" flag. In PowerShell from the project root: `Get-ChildItem -Path .\venv -Recurse \| Unblock-File`, then retry. If it still fails, move the project out of `Downloads` to a plain local folder (e.g. `C:\Resume_Crew`), delete `venv`, and reinstall. On a company-managed device the policy may be enforced centrally — ask IT to allow Python/pandas, or run the project inside WSL2 instead. |
 
 ## Development and verification
+
+Install development tools with `pip install -e '.[dev]'`.
 
 ```bash
 python -m pytest -q

@@ -7,8 +7,10 @@ import re
 import unicodedata
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
-OUTPUT_ROOT = Path("output")
+from .config import OUTPUT_ROOT
+
 META_FILENAME = "run_meta.json"
 
 
@@ -19,17 +21,26 @@ def slugify(value: str, max_length: int = 48) -> str:
     return slug[:max_length].strip("-") or "unknown"
 
 
-def create_run_directory(candidate_name: str, job_title: str) -> tuple[Path, str]:
-    """Create a fresh, uniquely-named directory under output/ for a report run."""
+def create_run_directory(
+    candidate_name: str,
+    job_title: str,
+    output_dir: Path | str | None = None,
+) -> tuple[Path, str]:
+    """Create a fresh, uniquely-named directory for a report run.
+
+    By default the directory is created under ``output/`` (project root).
+    Passing ``output_dir`` overrides that location (used by --output).
+    """
     # Human-readable timestamp instead of an opaque Unix epoch number.
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     slug = f"{slugify(candidate_name)}__{slugify(job_title)}__{timestamp}"
-    directory = OUTPUT_ROOT / slug
+    root = Path(output_dir) if output_dir is not None else OUTPUT_ROOT
+    directory = root / slug
     suffix = 1
     while directory.exists():
         suffix += 1
-        directory = OUTPUT_ROOT / f"{slug}-{suffix}"
+        directory = root / f"{slug}-{suffix}"
 
     directory.mkdir(parents=True, exist_ok=False)
     return directory, timestamp
@@ -53,7 +64,7 @@ def write_run_meta(
     (directory / META_FILENAME).write_text(json.dumps(meta, indent=2), encoding="utf-8")
 
 
-def list_report_runs(limit: int = 50) -> list[dict]:
+def list_report_runs(limit: int = 50) -> list[dict[str, Any]]:
     """Return metadata for past runs under output/, most recent first.
 
     Runs without a meta sidecar (e.g. created by an older version) are skipped
@@ -62,7 +73,7 @@ def list_report_runs(limit: int = 50) -> list[dict]:
     if not OUTPUT_ROOT.is_dir():
         return []
 
-    runs: list[dict] = []
+    runs: list[dict[str, Any]] = []
     for directory in OUTPUT_ROOT.iterdir():
         if not directory.is_dir():
             continue

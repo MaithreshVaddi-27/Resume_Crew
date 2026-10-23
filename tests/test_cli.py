@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 from resume_crew.cli import _disable_external_tracing, build_parser
 
@@ -29,8 +30,13 @@ def test_cli_has_no_print_ollama_env_flag() -> None:
     assert "--print-ollama-env" not in option_strings
 
 
-def test_cli_has_no_output_flag() -> None:
-    """The custom --output directory feature was removed; runs always auto-name their folder."""
+def test_cli_has_output_flag(tmp_path: Path) -> None:
+    """The --output flag lets callers direct reports to a chosen directory."""
     parser = build_parser()
     option_strings = {option for action in parser._actions for option in action.option_strings}
-    assert "--output" not in option_strings
+    assert "--output" in option_strings
+    assert "-o" in option_strings
+
+    # Passing --output should not error and build_parser must still construct.
+    args = parser.parse_args(["--output", str(tmp_path)])
+    assert args.output == str(tmp_path)

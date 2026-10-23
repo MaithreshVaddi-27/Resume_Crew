@@ -20,7 +20,11 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest==9.0.2"]
+dev = [
+  "pytest==9.0.2",
+  "ruff==0.9.0",
+  "mypy==1.13.0",
+]
 
 [project.scripts]
 resume-crew = "resume_crew.cli:main"
@@ -28,6 +32,32 @@ resume-crew = "resume_crew.cli:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+"resume_crew.prompts" = ["*.md"]
+
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+addopts = ["-q", "--strict-markers"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "C4", "UP", "PLE", "PERF", "S", "TID", "PGH"]
+ignore = ["E501", "B008", "S101", "S105", "TRY003", "TRY301", "BLE001"]
+fixable = ["F", "I", "B", "C4", "UP", "PLE", "PERF", "TID", "PGH"]
+unfixable = []
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["frozenset"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+disallow_any_generics = true
+strict_equality = true

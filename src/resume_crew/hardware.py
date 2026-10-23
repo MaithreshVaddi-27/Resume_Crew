@@ -7,6 +7,7 @@ import platform
 import subprocess
 import urllib.error
 import urllib.request
+from typing import Any
 
 
 def ollama_is_running(base_url: str, timeout: float | None = None) -> bool:
@@ -17,7 +18,9 @@ def ollama_is_running(base_url: str, timeout: float | None = None) -> bool:
         except ValueError:
             timeout = 3.0
     try:
-        with urllib.request.urlopen(f"{base_url.rstrip('/')}/api/tags", timeout=timeout):
+        with urllib.request.urlopen(  # noqa: S310
+            f"{base_url.rstrip('/')}/api/tags", timeout=timeout
+        ):
             return True
     except (urllib.error.URLError, OSError, TimeoutError):
         return False
@@ -29,27 +32,33 @@ def _system_memory_gb() -> float | None:
     try:
         if system == "Darwin":
             output = subprocess.run(
-                ["sysctl", "-n", "hw.memsize"],
-                capture_output=True, text=True, timeout=5,
+                ["sysctl", "-n", "hw.memsize"],  # noqa: S607
+                capture_output=True,
+                text=True,
+                timeout=5,
             ).stdout.strip()
-            return round(int(output) / 1024 ** 3, 1)
+            return round(int(output) / 1024**3, 1)
 
         if system == "Windows":
             # os.sysconf is Linux-only; use ctypes on Windows instead.
             import ctypes
+
             mem_kb = ctypes.c_ulonglong(0)
-            ctypes.windll.kernel32.GetPhysicallyInstalledSystemMemory(ctypes.byref(mem_kb))
+            ctypes.windll.kernel32.GetPhysicallyInstalledSystemMemory(  # type: ignore[attr-defined]
+                ctypes.byref(mem_kb)
+            )
             return round(mem_kb.value / (1024 * 1024), 1)  # KB → GB
 
         # Linux and other POSIX systems.
         return round(
-            os.sysconf("SC_PHYS_PAGES") * os.sysconf("SC_PAGE_SIZE") / 1024 ** 3, 1,
+            os.sysconf("SC_PHYS_PAGES") * os.sysconf("SC_PAGE_SIZE") / 1024**3,
+            1,
         )
     except (ValueError, OSError, subprocess.SubprocessError, AttributeError):
         return None
 
 
-def detect_compute_device() -> dict:
+def detect_compute_device() -> dict[str, Any]:
     info = {
         "cuda": False,
         "mps": False,
@@ -62,8 +71,10 @@ def detect_compute_device() -> dict:
 
     try:
         result = subprocess.run(
-            ["nvidia-smi", "--query-gpu=name,memory.total", "--format=csv,noheader,nounits"],
-            capture_output=True, text=True, timeout=5,
+            ["nvidia-smi", "--query-gpu=name,memory.total", "--format=csv,noheader,nounits"],  # noqa: S607
+            capture_output=True,
+            text=True,
+            timeout=5,
         )
         lines = [ln.strip() for ln in result.stdout.strip().splitlines() if ln.strip()]
         if lines:
@@ -76,7 +87,7 @@ def detect_compute_device() -> dict:
                     if vram > best_vram:
                         best_vram = vram
                         best_name = name.strip()
-                except (ValueError, IndexError):
+                except (ValueError, IndexError):  # noqa: PERF203
                     continue
             if best_name:
                 info.update(
@@ -87,15 +98,15 @@ def detect_compute_device() -> dict:
     except (OSError, subprocess.SubprocessError):
         pass
 
-    info["mps"] = (
-        platform.system() == "Darwin"
-        and platform.machine().lower() in {"arm64", "aarch64"}
-    )
+    info["mps"] = platform.system() == "Darwin" and platform.machine().lower() in {
+        "arm64",
+        "aarch64",
+    }
     info["selected"] = "cuda" if info["cuda"] else "mps" if info["mps"] else "cpu"
     return info
 
 
-def resolve_ollama_profile(requested: str = "auto") -> dict:
+def resolve_ollama_profile(requested: str = "auto") -> dict[str, Any]:
     if requested not in {"auto", "cuda", "mps", "cpu"}:
         raise ValueError("Ollama profile must be auto, cuda, mps, or cpu.")
 
@@ -112,7 +123,7 @@ def resolve_ollama_profile(requested: str = "auto") -> dict:
     return {"name": name, "hardware": hardware, "context": context}
 
 
-def print_profile(profile: dict) -> None:
+def print_profile(profile: dict[str, Any]) -> None:
     hardware = profile["hardware"]
     print("\nLocal accelerator detection:")
     print(f"  CUDA: {'available' if hardware['cuda'] else 'not found'}")

@@ -13,7 +13,9 @@ def test_keyword_score_matches_normalized_terms() -> None:
 
 def test_single_char_r_is_captured_as_token() -> None:
     """ISSUE-17: single-char uppercase `R` must now be extractable as a keyword."""
-    result = keyword_match_score("Proficient in R and Python for statistical analysis", "R Python SAS")
+    result = keyword_match_score(
+        "Proficient in R and Python for statistical analysis", "R Python SAS"
+    )
     # R and Python should both match; SAS should not.
     assert "r" in result.matched
     assert "python" in result.matched

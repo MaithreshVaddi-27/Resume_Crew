@@ -1,0 +1,193 @@
+/* ── Base — clean, professional dark theme ────────────────────────────────── */
+:root {
+    --bg-page:    #0b1220;
+    --bg-card:    #131b2c;
+    --bg-raised:  #1a2337;
+    --border:     #2a3450;
+    --accent:     #3b82f6;
+    --accent-2:   #60a5fa;
+    --text:       #e2e8f0;
+    --muted:      #94a3b8;
+    --radius:     8px;
+}
+
+body, .gradio-container {
+    background: var(--bg-page) !important;
+    color: var(--text) !important;
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif !important;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+#app-header {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: 24px 32px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+}
+#app-header h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #f8fafc !important;
+    margin: 0 0 4px 0;
+    letter-spacing: -0.01em;
+}
+#app-header p {
+    color: var(--muted) !important;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+/* ── Cards / Panels ──────────────────────────────────────────────────────── */
+.panel-card {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius) !important;
+    padding: 20px !important;
+    margin-bottom: 16px !important;
+}
+
+/* ── Inputs ──────────────────────────────────────────────────────────────── */
+.gradio-container input,
+.gradio-container textarea,
+.gradio-container select {
+    background: var(--bg-raised) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text) !important;
+    border-radius: 6px !important;
+}
+.gradio-container label span {
+    color: var(--muted) !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.02em !important;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+#analyze-btn {
+    background: var(--accent) !important;
+    border: none !important;
+    color: #f8fafc !important;
+    font-weight: 600 !important;
+    font-size: 0.95rem !important;
+    border-radius: 6px !important;
+    padding: 11px 22px !important;
+    transition: background 0.15s !important;
+    cursor: pointer !important;
+}
+#analyze-btn:hover { background: var(--accent-2) !important; }
+#rank-btn {
+    background: transparent !important;
+    border: 1px solid var(--accent) !important;
+    color: var(--accent-2) !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+    padding: 11px 22px !important;
+    transition: background 0.15s !important;
+}
+#rank-btn:hover { background: var(--bg-raised) !important; }
+
+/* ── Progress box ─────────────────────────────────────────────────────────── */
+#progress-box textarea {
+    background: #060a13 !important;
+    border: 1px solid var(--border) !important;
+    color: #cbd5e1 !important;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+    font-size: 0.82rem !important;
+    border-radius: 6px !important;
+}
+
+/* ── Score banner ─────────────────────────────────────────────────────────── */
+#score-display {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border) !important;
+    border-left: 4px solid var(--accent) !important;
+    border-radius: var(--radius) !important;
+    padding: 20px 28px !important;
+}
+
+/* ── Tabs — clean underline style, no gradient/glow ───────────────────────── */
+.gradio-container .tabs {
+    border: none !important;
+}
+.gradio-container .tab-nav {
+    border-bottom: 1px solid var(--border) !important;
+    gap: 4px !important;
+}
+.gradio-container .tab-nav button {
+    background: transparent !important;
+    color: var(--muted) !important;
+    border: none !important;
+    border-bottom: 2px solid transparent !important;
+    border-radius: 0 !important;
+    font-weight: 600 !important;
+    padding: 10px 14px !important;
+    transition: color 0.15s, border-color 0.15s !important;
+}
+.gradio-container .tab-nav button.selected {
+    background: transparent !important;
+    color: var(--accent-2) !important;
+    border-bottom: 2px solid var(--accent) !important;
+}
+
+/* ── Markdown output ──────────────────────────────────────────────────────── */
+.gradio-container .prose,
+.gradio-container .markdown-body {
+    color: var(--text) !important;
+    background: transparent !important;
+}
+.gradio-container .prose h1,
+.gradio-container .prose h2,
+.gradio-container .prose h3 {
+    color: var(--accent-2) !important;
+    font-weight: 700 !important;
+}
+.gradio-container .prose strong { color: #f1f5f9 !important; }
+.gradio-container .prose code {
+    background: var(--bg-raised) !important;
+    color: #5eead4 !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 4px !important;
+    padding: 1px 6px !important;
+}
+.gradio-container .prose table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+}
+.gradio-container .prose th {
+    background: var(--bg-raised) !important;
+    color: var(--text) !important;
+    font-weight: 600 !important;
+    padding: 8px 12px !important;
+    border: 1px solid var(--border) !important;
+}
+.gradio-container .prose td {
+    padding: 8px 12px !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text) !important;
+}
+
+/* ── Resume Highlights <mark> tags — force readable in dark mode ─────────── */
+.gradio-container mark {
+    background: #16653480 !important;
+    color: #d1fae5 !important;
+}
+
+/* ── File upload zone ─────────────────────────────────────────────────────── */
+.gradio-container .upload-container,
+.gradio-container .file-preview {
+    background: var(--bg-raised) !important;
+    border: 1.5px dashed var(--border) !important;
+    border-radius: var(--radius) !important;
+    transition: border-color 0.2s !important;
+}
+.gradio-container .upload-container:hover {
+    border-color: var(--accent) !important;
+}
+
+/* ── Scrollbars ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-page); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }

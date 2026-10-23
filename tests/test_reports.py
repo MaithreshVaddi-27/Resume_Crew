@@ -24,7 +24,9 @@ def test_word_export_is_not_part_of_the_pipeline_module() -> None:
 
 def test_splits_with_crlf_line_endings() -> None:
     """BUG-05: CRLF line endings from some LLMs must not break section parsing."""
-    text = "## Tailored Resume Bullets\r\n- Bullet one\r\n\r\n## Interview Prep Guide\r\n1. Question"
+    text = (
+        "## Tailored Resume Bullets\r\n- Bullet one\r\n\r\n## Interview Prep Guide\r\n1. Question"
+    )
     bullets, guide = split_writer_output(text)
     assert "Bullet one" in bullets
     assert "Question" in guide

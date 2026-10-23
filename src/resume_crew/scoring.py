@@ -35,12 +35,11 @@ def tokenize(text: str) -> list[str]:
 
 def extract_keywords(text: str, max_keywords: int = 40) -> list[str]:
     counts = Counter(
-        token for token in tokenize(text)
-        if token not in STOPWORDS and not token.isdigit()
+        token for token in tokenize(text) if token not in STOPWORDS and not token.isdigit()
     )
     return [
-        term for term, _ in
-        sorted(counts.items(), key=lambda pair: (-pair[1], pair[0]))[:max_keywords]
+        term
+        for term, _ in sorted(counts.items(), key=lambda pair: (-pair[1], pair[0]))[:max_keywords]
     ]
 
 
@@ -80,7 +79,7 @@ def highlight_resume_matches(resume_text: str, match: KeywordMatch) -> str:
     if not matched_lookup:
         return f"<pre style='white-space:pre-wrap'>{_html.escape(resume_text)}</pre>"
 
-    def _wrap(m: re.Match) -> str:
+    def _wrap(m: re.Match[str]) -> str:
         token = m.group(0)
         normalized = token.lower().strip(".-/")
         escaped_token = _html.escape(token)
@@ -98,7 +97,7 @@ def highlight_resume_matches(resume_text: str, match: KeywordMatch) -> str:
     pos = 0
     for m in TOKEN_PATTERN.finditer(resume_text):
         if m.start() > pos:
-            pieces.append(_html.escape(resume_text[pos:m.start()]))
+            pieces.append(_html.escape(resume_text[pos : m.start()]))
         pieces.append(_wrap(m))
         pos = m.end()
     if pos < len(resume_text):

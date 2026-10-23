@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+  resume-crew:
+    build: .
+    ports:
+      - "7860:7860"
+    env_file:
+      - .env
+    environment:
+      - CREWAI_TRACING_ENABLED=false
+      - CREWAI_DISABLE_TELEMETRY=true
+      - CREWAI_DISABLE_TRACKING=true
+      - OTEL_SDK_DISABLED=true
+    volumes:
+      - ./output:/app/output
+    restart: unless-stopped

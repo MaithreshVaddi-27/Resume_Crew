@@ -9,31 +9,36 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from . import __version__
+from .config import load_settings
 from .document_reader import SUPPORTED_DOCUMENT_EXTENSIONS, extract_text
-from .hardware import (ollama_is_running, print_profile, resolve_ollama_profile)
+from .hardware import ollama_is_running, print_profile, resolve_ollama_profile
+from .pipeline import (
+    build_llm,
+    build_report_files,
+    first_meaningful_line,
+    format_resume_ranking,
+    run_llm_analysis,
+    score_resume_path,
+)
 from .scoring import keyword_match_score
 from .storage import create_run_directory
 
 
 def _disable_external_tracing() -> None:
     """Force private, quiet CrewAI execution before its package is imported."""
-    os.environ["CREWAI_TRACING_ENABLED"] = "false"
-    os.environ["CREWAI_DISABLE_TELEMETRY"] = "true"
-    os.environ["CREWAI_DISABLE_TRACKING"] = "true"
-    os.environ["OTEL_SDK_DISABLED"] = "true"
+    settings = load_settings()
+    settings.apply_telemetry_env()
 
 
 def _rank_resumes(directory: str, job_description: str, provider: str) -> None:
-    # CrewAI is intentionally imported only once ranking actually runs.
-    from .pipeline import build_llm, run_llm_match_score
-
     job_text = extract_text(job_description)
     source = Path(directory).expanduser().resolve()
     if not source.is_dir():
         raise NotADirectoryError(f"'{source}' is not a directory.")
 
     paths = sorted(
-        p for p in source.iterdir()
+        p
+        for p in source.iterdir()
         if p.is_file() and p.suffix.lower() in SUPPORTED_DOCUMENT_EXTENSIONS
     )
     if not paths:
@@ -43,35 +48,17 @@ def _rank_resumes(directory: str, job_description: str, provider: str) -> None:
     llm, resolved_provider = build_llm(provider)
     print(f"Ranking {len(paths)} resume(s) with {resolved_provider.title()}...")
 
-    results: list[tuple[str, float | None, str]] = []
+    results = []
     for index, path in enumerate(paths, 1):
         print(f"  [{index}/{len(paths)}] Scoring {path.name}...")
-        try:
-            resume_text = extract_text(str(path))
-            score, note = run_llm_match_score(resume_text, job_text, llm)
-            results.append((path.name, score, note))
-        except Exception as exc:
-            # BUG-07: ensure error string is never empty so the table note is always valid.
-            results.append((path.name, None, str(exc) or "(unknown error)"))
-
-    results.sort(key=lambda item: (item[1] is None, -(item[1] or 0)))
-
-    lines = ["| Rank | Resume | Score | Notes |", "|---:|---|---:|---|"]
-    for index, (name, score, note) in enumerate(results, 1):
-        score_str = "--" if score is None else f"{score:.0f}%"
-        safe_name = name.replace("|", "\\|")
-        safe_note = (note or "").replace("|", "\\|")
-        lines.append(f"| {index} | {safe_name} | {score_str} | {safe_note} |")
-
-    report = "# Resume Ranking\n\n" + "\n".join(lines) + "\n"
-    print(report)
+        results.append(score_resume_path(path, job_text, llm))
+    print(format_resume_ranking(results))
 
 
 def _run_analysis(args: argparse.Namespace) -> None:
     # CrewAI is intentionally imported only for an analysis request. Its
     # import initializes optional local storage, which ranking and hardware
     # diagnostics should never require.
-    from .pipeline import build_llm, build_report_files, first_meaningful_line, run_llm_analysis
 
     resume_text = extract_text(args.resume)
     job_text = extract_text(args.job_description)
@@ -87,12 +74,25 @@ def _run_analysis(args: argparse.Namespace) -> None:
         print(f"  {msg}")
 
     resume_profile, job_profile, gaps, writer_output = run_llm_analysis(
-        resume_text, job_text, llm, on_step=_on_step,
+        resume_text,
+        job_text,
+        llm,
+        on_step=_on_step,
     )
     files = build_report_files(
-        candidate, job_title, score, resume_profile, job_profile, gaps, writer_output,
+        candidate,
+        job_title,
+        score,
+        resume_profile,
+        job_profile,
+        gaps,
+        writer_output,
     )
-    directory, _timestamp = create_run_directory(candidate, job_title)
+    directory, _timestamp = create_run_directory(
+        candidate,
+        job_title,
+        output_dir=args.output,
+    )
     for name, content in files.items():
         (directory / name).write_text(content, encoding="utf-8")
 
@@ -104,30 +104,46 @@ def build_parser() -> argparse.ArgumentParser:
         description="Resume_Crew — grounded, local-first resume analysis",
     )
     parser.add_argument(
-        "--version", action="version", version=f"Resume_Crew {__version__}",
+        "--version",
+        action="version",
+        version=f"Resume_Crew {__version__}",
     )
     parser.add_argument(
-        "--resume", default=os.getenv("RESUME_PATH"),
+        "--resume",
+        default=os.getenv("RESUME_PATH", "./samples/Resumes/sample_resume.pdf"),
         help="Resume path (.pdf, .docx, .txt, .md)",
     )
     parser.add_argument(
-        "--job-description", "--jd", dest="job_description",
-        default=os.getenv("JD_PATH"), help="Job description path",
+        "--job-description",
+        "--jd",
+        dest="job_description",
+        default=os.getenv("JD_PATH", "./samples/Job_description/sample_job_description.pdf"),
+        help="Job description path",
     )
     parser.add_argument(
-        "--provider", choices=("auto", "ollama", "gemini"),
+        "--provider",
+        choices=("auto", "ollama", "gemini"),
         default=os.getenv("LLM_PROVIDER", "auto"),
     )
     parser.add_argument(
-        "--rank-resumes", metavar="DIRECTORY",
+        "--output",
+        "-o",
+        metavar="DIRECTORY",
+        help="Directory to write the report into (defaults to output/<run-slug>)",
+    )
+    parser.add_argument(
+        "--rank-resumes",
+        metavar="DIRECTORY",
         help="Score every resume in DIRECTORY against --job-description using the LLM",
     )
     parser.add_argument(
-        "--check-hardware", action="store_true",
+        "--check-hardware",
+        action="store_true",
         help="Show Ollama hardware recommendation",
     )
     parser.add_argument(
-        "--ollama-profile", choices=("auto", "cuda", "mps", "cpu"),
+        "--ollama-profile",
+        choices=("auto", "cuda", "mps", "cpu"),
         default=os.getenv("OLLAMA_PROFILE", "auto"),
     )
     return parser
@@ -161,8 +177,12 @@ def main() -> None:
         _run_analysis(args)
 
     except (
-        FileNotFoundError, FileExistsError, NotADirectoryError,
-        OSError, RuntimeError, ValueError,
+        FileNotFoundError,
+        FileExistsError,
+        NotADirectoryError,
+        OSError,
+        RuntimeError,
+        ValueError,
     ) as exc:
         parser.exit(1, f"Error: {exc}\n")
 
