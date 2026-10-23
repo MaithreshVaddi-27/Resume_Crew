@@ -26,7 +26,7 @@ MAX_EXTRACTED_CHARACTERS = 100_000
 
 # Default LLM models.
 DEFAULT_OLLAMA_MODEL = "gemma3:4b"
-DEFAULT_GEMINI_MODEL = "gemini/gemini-3.1-flash-lite"
+DEFAULT_GEMINI_MODEL = "gemini/gemini-3.8-flash"
 
 # Valid providers / hardware profiles.
 VALID_PROVIDERS = ("auto", "ollama", "gemini")

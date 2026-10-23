@@ -1,55 +1,127 @@
-/* ── Base — clean, professional dark theme ────────────────────────────────── */
+/* Resume evidence workspace: ink, paper, and restrained signal blue. */
 :root {
-    --bg-page:    #0b1220;
-    --bg-card:    #131b2c;
-    --bg-raised:  #1a2337;
-    --border:     #2a3450;
-    --accent:     #3b82f6;
-    --accent-2:   #60a5fa;
-    --text:       #e2e8f0;
-    --muted:      #94a3b8;
-    --radius:     8px;
+    color-scheme: dark;
+    --bg-page: #10151d;
+    --bg-card: #171f29;
+    --bg-raised: #202b37;
+    --border: #354352;
+    --accent: #78a9e6;
+    --accent-2: #a7c8f2;
+    --text: #e7ebef;
+    --muted: #b1bdc8;
+    --radius: 5px;
 }
 
 body, .gradio-container {
     background: var(--bg-page) !important;
     color: var(--text) !important;
-    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif !important;
+    font-family: 'Avenir Next', 'Segoe UI', sans-serif !important;
+    font-size: 1rem !important;
 }
 
-/* ── Header ─────────────────────────────────────────────────────────────── */
+/* ── Brand and orientation ──────────────────────────────────────────────── */
 #app-header {
-    background: var(--bg-card);
-    border-radius: var(--radius);
-    padding: 24px 32px;
-    margin-bottom: 20px;
-    border: 1px solid var(--border);
-    border-left: 4px solid var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+    padding: 20px 0 22px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--border);
 }
 #app-header h1 {
-    font-size: 1.6rem;
-    font-weight: 700;
-    color: #f8fafc !important;
-    margin: 0 0 4px 0;
-    letter-spacing: -0.01em;
+    font-size: 1.55rem;
+    font-weight: 650;
+    color: var(--text) !important;
+    margin: 0 0 3px;
+    letter-spacing: -0.025em;
 }
 #app-header p {
     color: var(--muted) !important;
     margin: 0;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+}
+.brand-mark {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+    color: var(--accent-2);
+    font-size: 0.83rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+.header-note {
+    margin-left: auto;
+    color: var(--muted);
+    font-size: 0.78rem;
 }
 
 /* ── Global local-model selector ───────────────────────────────────────── */
-.model-toolbar {
-    max-width: 760px;
-    margin: 0 auto 18px !important;
-    padding: 14px 18px !important;
+#settings-accordion {
+    margin: 0 0 14px !important;
+    padding: 0 !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius) !important;
+    background: transparent !important;
+    overflow: visible !important;
+    min-width: 0 !important;
+}
+#settings-accordion > .label-wrap {
+    width: 100% !important;
+    min-height: 44px !important;
+    padding: 10px 14px !important;
+    color: var(--text) !important;
+    background: transparent !important;
+    justify-content: space-between !important;
+    text-align: left !important;
+}
+#settings-accordion [data-testid="accordion-content"] {
+    overflow: visible !important;
+}
+#settings-accordion .model-toolbar {
+    max-width: none;
+    margin: 0 !important;
+    padding: 0 14px 12px !important;
+    align-items: end !important;
+    gap: 12px !important;
+}
+#settings-accordion .model-toolbar > *,
+#settings-accordion .model-toolbar > div {
+    min-width: 0 !important;
+}
+#settings-accordion .model-toolbar button {
+    white-space: nowrap;
+}
+#model-select label span, #provider-select label span { color: var(--muted) !important; }
+.model-guide { color: var(--muted) !important; margin: 8px 0 16px !important; }
+.model-guide strong { color: var(--text) !important; }
+.workflow-tabs { margin-top: 6px; }
+.section-heading h2, .result-heading h2 {
+    margin: 24px 0 5px !important;
+    color: var(--text) !important;
+    font-size: 1.35rem !important;
+    font-weight: 620 !important;
+}
+.section-intro { color: #d1d9e1 !important; margin-bottom: 18px !important; }
+.section-intro p, .section-intro .md { color: #d1d9e1 !important; }
+.gradio-container .section-intro.prose { color: #d1d9e1 !important; }
+.gradio-container .section-intro.prose p { color: #d1d9e1 !important; }
+#resume-upload, #jd-upload { background: transparent !important; }
+#resume-upload .upload-container, #jd-upload .upload-container,
+#resume-upload .file-preview, #jd-upload .file-preview { background: var(--bg-raised) !important; }
+.document-row {
+    gap: 18px !important;
+    padding: 16px !important;
     background: var(--bg-card) !important;
     border: 1px solid var(--border) !important;
     border-radius: var(--radius) !important;
-    align-items: end !important;
 }
-#model-select label span { color: var(--accent-2) !important; }
+.action-row { align-items: end !important; margin-top: 12px !important; }
+.result-heading { margin-top: 26px !important; }
+.result-tabs { margin-top: 8px; border-top: 1px solid var(--border); padding-top: 8px; }
 
 /* ── Cards / Panels ──────────────────────────────────────────────────────── */
 .panel-card {
@@ -70,25 +142,25 @@ body, .gradio-container {
     border-radius: 6px !important;
 }
 .gradio-container label span {
-    color: var(--muted) !important;
-    font-size: 0.8rem !important;
+    color: #c5ced7 !important;
+    font-size: 0.95rem !important;
     font-weight: 600 !important;
-    letter-spacing: 0.02em !important;
 }
 
 /* ── Buttons ─────────────────────────────────────────────────────────────── */
 #analyze-btn {
-    background: var(--accent) !important;
-    border: none !important;
-    color: #f8fafc !important;
-    font-weight: 600 !important;
-    font-size: 0.95rem !important;
-    border-radius: 6px !important;
+    min-height: 48px;
+    background: #315f96 !important;
+    border: 1px solid #6f9fd6 !important;
+    color: #ffffff !important;
+    font-weight: 650 !important;
+    font-size: 1rem !important;
+    border-radius: var(--radius) !important;
     padding: 11px 22px !important;
-    transition: background 0.15s !important;
+    transition: background-color 0.15s ease-out, border-color 0.15s ease-out !important;
     cursor: pointer !important;
 }
-#analyze-btn:hover { background: var(--accent-2) !important; }
+#analyze-btn:hover { background: #3a70ad !important; }
 #rank-btn {
     background: transparent !important;
     border: 1px solid var(--accent) !important;
@@ -139,8 +211,26 @@ body, .gradio-container {
 }
 .gradio-container .tab-nav button.selected {
     background: transparent !important;
-    color: var(--accent-2) !important;
+    color: var(--text) !important;
     border-bottom: 2px solid var(--accent) !important;
+}
+.gradio-container :is(button, input, textarea, select, [role="tab"]):focus-visible {
+    outline: 3px solid var(--accent-2) !important;
+    outline-offset: 3px !important;
+}
+.gradio-container button { min-height: 44px; }
+::selection { background: #315f96; color: #fff; }
+@media (max-width: 640px) {
+    #app-header { align-items: flex-start; gap: 12px; }
+    .header-note { display: none; }
+    .document-row { padding: 10px !important; gap: 10px !important; }
+    .action-row { gap: 8px !important; }
+    #settings-accordion .model-toolbar { gap: 8px !important; }
+    .gradio-container .tab-nav { gap: 0 !important; }
+    .gradio-container .tab-nav button { padding: 9px 10px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
 }
 
 /* ── Markdown output ──────────────────────────────────────────────────────── */

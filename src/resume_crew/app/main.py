@@ -31,6 +31,15 @@ from resume_crew.app import workers  # noqa: E402
 from resume_crew.document_reader import SUPPORTED_DOCUMENT_EXTENSIONS  # noqa: E402
 
 PROVIDER_CHOICES = ["auto", "ollama", "gemini"]
+GEMINI_MODELS = [
+    ("Gemini 3.8 Flash · recommended", "gemini/gemini-3.8-flash"),
+    ("Gemini 3.6 Flash", "gemini/gemini-3.6-flash"),
+    ("Gemini 3.5 Flash-Lite · fast and low cost", "gemini/gemini-3.5-flash-lite"),
+    ("Gemini 3.1 Flash-Lite", "gemini/gemini-3.1-flash-lite"),
+    ("Gemini 2.5 Pro · legacy", "gemini/gemini-2.5-pro"),
+    ("Gemini 2.5 Flash · legacy", "gemini/gemini-2.5-flash"),
+    ("Gemini 2.5 Flash-Lite · legacy", "gemini/gemini-2.5-flash-lite"),
+]
 ACCEPTED_TYPES = list(SUPPORTED_DOCUMENT_EXTENSIONS)
 LOCAL_MODELS, DEFAULT_LOCAL_MODEL = workers.local_model_choices()
 
@@ -56,33 +65,90 @@ def build_demo() -> gr.Blocks:
     ) as demo:
         # ── Header ────────────────────────────────────────────────────────────
         gr.HTML("""
-        <div id="app-header">
-            <h1>🎯 Resume_Crew</h1>
-            <p>Grounded, evidence-based resume &amp; job description analysis powered by AI</p>
-        </div>
+        <header id="app-header">
+            <div class="brand-mark" aria-hidden="true">RC</div>
+            <div>
+                <h1>Resume Crew</h1>
+                <p>Evidence-led resume and job matching</p>
+            </div>
+            <div class="header-note">LOCAL-FIRST ANALYSIS</div>
+        </header>
         """)
 
-        with gr.Row(elem_classes=["model-toolbar"]):
-            model_dd = gr.Dropdown(
-                choices=LOCAL_MODELS,
-                value=DEFAULT_LOCAL_MODEL,
-                label="Local Ollama Model",
-                info="Installed models from your local Ollama server",
-                allow_custom_value=False,
-                scale=4,
-                elem_id="model-select",
+        with gr.Accordion("Analysis settings", open=False, elem_id="settings-accordion"):
+            with gr.Row(elem_classes=["model-toolbar"]):
+                provider_dd = gr.Dropdown(
+                    choices=[
+                        ("Automatic (Ollama, then Gemini)", "auto"),
+                        ("Ollama (local)", "ollama"),
+                        ("Gemini (cloud)", "gemini"),
+                    ],
+                    value=os.getenv("LLM_PROVIDER", "auto"),
+                    label="Provider",
+                    info=(
+                        "Choose Gemini for cloud analysis, or Ollama to keep prompts local. "
+                        "Automatic prefers Ollama when available."
+                    ),
+                    scale=1,
+                    elem_id="provider-select",
+                )
+                model_dd = gr.Dropdown(
+                    choices=LOCAL_MODELS,
+                    value=DEFAULT_LOCAL_MODEL,
+                    label="Ollama model",
+                    info=(
+                        "Used with Ollama, or as Automatic's fallback. Start with a 4B model; "
+                        "install with `ollama pull gemma3:4b`."
+                    ),
+                    allow_custom_value=False,
+                    scale=2,
+                    elem_id="model-select",
+                )
+                gemini_model_dd = gr.Dropdown(
+                    choices=GEMINI_MODELS,
+                    value=os.getenv("GEMINI_MODEL", "gemini/gemini-3.8-flash"),
+                    label="Gemini model",
+                    info=(
+                        "Flash balances speed and quality; Flash-Lite is faster and cheaper; "
+                        "Pro suits harder tasks."
+                    ),
+                    visible=os.getenv("LLM_PROVIDER", "auto") == "gemini",
+                    scale=2,
+                    elem_id="gemini-model-select",
+                )
+                refresh_models_btn = gr.Button("Refresh models", scale=1, variant="secondary")
+            refresh_models_btn.click(
+                fn=workers.refresh_local_models,
+                inputs=[model_dd],
+                outputs=[model_dd],
             )
-            refresh_models_btn = gr.Button("↻ Refresh models", scale=1, variant="secondary")
-        refresh_models_btn.click(
-            fn=workers.refresh_local_models,
-            inputs=[model_dd],
-            outputs=[model_dd],
-        )
 
-        with gr.Tabs():
+            def update_model_controls(provider: str) -> tuple[Any, Any]:
+                return (
+                    gr.update(visible=provider != "gemini"),
+                    gr.update(visible=provider == "gemini"),
+                )
+
+            provider_dd.change(
+                fn=update_model_controls,
+                inputs=[provider_dd],
+                outputs=[model_dd, gemini_model_dd],
+            )
+            demo.load(
+                fn=update_model_controls,
+                inputs=[provider_dd],
+                outputs=[model_dd, gemini_model_dd],
+            )
+
+        with gr.Tabs(elem_classes=["workflow-tabs"]):
             # ── Tab 1: Analyze ─────────────────────────────────────────────────
-            with gr.Tab("✨ Analyze Resume"):
-                with gr.Row():
+            with gr.Tab("Analyze", elem_classes=["workflow-tab"]):
+                gr.Markdown("## Compare a resume with a role", elem_classes=["section-heading"])
+                gr.Markdown(
+                    "Upload the resume and complete job posting to see matched evidence, gaps, and a grounded fit score.",
+                    elem_classes=["section-intro"],
+                )
+                with gr.Row(elem_classes=["document-row"]):
                     with gr.Column(scale=1):
                         resume_input = gr.File(
                             label="Resume",
@@ -96,22 +162,15 @@ def build_demo() -> gr.Blocks:
                             elem_id="jd-upload",
                         )
 
-                with gr.Row():
-                    provider_dd = gr.Dropdown(
-                        choices=PROVIDER_CHOICES,
-                        value=os.getenv("LLM_PROVIDER", "auto"),
-                        label="LLM Provider",
-                        info="'auto' uses local Ollama if running, then Gemini",
-                        scale=1,
-                    )
+                with gr.Row(elem_classes=["action-row"]):
                     analyze_btn = gr.Button(
-                        "🚀 Analyze",
+                        "Analyze match",
                         elem_id="analyze-btn",
-                        scale=2,
+                        scale=3,
                         variant="primary",
                     )
                     cancel_btn = gr.Button(
-                        "🛑 Cancel",
+                        "Cancel analysis",
                         scale=1,
                         variant="stop",
                     )
@@ -128,27 +187,28 @@ def build_demo() -> gr.Blocks:
                 )
 
                 # ── Results ───────────────────────────────────────────────────
-                with gr.Tabs():
-                    with gr.Tab("📊 Score"):
+                gr.Markdown("## Match report", elem_classes=["result-heading"])
+                with gr.Tabs(elem_classes=["result-tabs"]):
+                    with gr.Tab("Score"):
                         score_out = gr.Markdown(elem_id="score-display")
-                    with gr.Tab("📝 Resume Profile"):
+                    with gr.Tab("Resume profile"):
                         resume_profile_out = gr.Markdown()
-                    with gr.Tab("💼 Job Profile"):
+                    with gr.Tab("Job profile"):
                         job_profile_out = gr.Markdown()
-                    with gr.Tab("🔍 Gap Analysis"):
+                    with gr.Tab("Gap analysis"):
                         gap_out = gr.Markdown()
-                    with gr.Tab("✏️ Resume Bullets"):
+                    with gr.Tab("Tailored bullets"):
                         bullets_out = gr.Markdown()
-                    with gr.Tab("🎤 Interview Prep"):
+                    with gr.Tab("Interview prep"):
                         interview_out = gr.Markdown()
-                    with gr.Tab("🖍️ Resume Highlights"):
+                    with gr.Tab("Resume evidence"):
                         gr.Markdown(
                             "Matched keywords highlighted directly in your resume text. "
                             "Missing keywords can't be highlighted here since they don't appear "
                             "in the resume — see the Score tab for that list."
                         )
                         highlight_out = gr.HTML()
-                    with gr.Tab("📄 Full Report"):
+                    with gr.Tab("Full report"):
                         report_out = gr.Markdown()
                         pdf_file_out = gr.File(
                             label="⬇️ Download Full Report (PDF)", interactive=False
@@ -180,7 +240,14 @@ def build_demo() -> gr.Blocks:
 
                 analyze_btn.click(
                     fn=workers.analyze_stream,
-                    inputs=[resume_input, jd_input, provider_dd, model_dd, cancel_event_state],
+                    inputs=[
+                        resume_input,
+                        jd_input,
+                        provider_dd,
+                        model_dd,
+                        gemini_model_dd,
+                        cancel_event_state,
+                    ],
                     outputs=analyze_outputs,
                 )
                 cancel_btn.click(
@@ -190,7 +257,7 @@ def build_demo() -> gr.Blocks:
                 )
 
             # ── Tab: Build Resume ────────────────────────────────────────────────
-            with gr.Tab("✨ Build Resume"):
+            with gr.Tab("Build resume"):
                 gr.Markdown(
                     "Draft a resume **tailored to a target job** — reordered and phrased "
                     "for relevance, but built **only from facts you provide**. Nothing is "
@@ -218,13 +285,6 @@ def build_demo() -> gr.Blocks:
                             label="Target Job Description",
                             file_types=ACCEPTED_TYPES,
                         )
-
-                build_provider_dd = gr.Dropdown(
-                    choices=PROVIDER_CHOICES,
-                    value=os.getenv("LLM_PROVIDER", "auto"),
-                    label="LLM Provider",
-                    info="'auto' uses local Ollama if running, then Gemini",
-                )
 
                 build_btn = gr.Button("✨ Draft Resume", elem_id="analyze-btn", variant="primary")
                 build_progress = gr.Markdown()
@@ -257,14 +317,15 @@ def build_demo() -> gr.Blocks:
                         build_resume_input,
                         build_notes_input,
                         build_jd_input,
-                        build_provider_dd,
+                        provider_dd,
                         model_dd,
+                        gemini_model_dd,
                     ],
                     outputs=build_outputs,
                 )
 
             # ── Tab: Rank Resumes ────────────────────────────────────────────
-            with gr.Tab("📈 Rank Resumes"):
+            with gr.Tab("Rank resumes"):
                 gr.Markdown(
                     "Score every resume in a folder against a job description **using the LLM**. "
                     "Each resume gets its own scoring call, so this can take a while for large folders."
@@ -283,24 +344,17 @@ def build_demo() -> gr.Blocks:
                             file_types=ACCEPTED_TYPES,
                         )
 
-                rank_provider_dd = gr.Dropdown(
-                    choices=PROVIDER_CHOICES,
-                    value=os.getenv("LLM_PROVIDER", "auto"),
-                    label="LLM Provider",
-                    info="'auto' uses local Ollama if running, then Gemini",
-                )
-
                 rank_btn = gr.Button("📊 Rank Resumes", elem_id="rank-btn", variant="secondary")
                 rank_out = gr.Markdown(label="Ranking Results")
 
                 rank_btn.click(
                     fn=workers.rank_resumes_fn,
-                    inputs=[dir_input, rank_jd_input, rank_provider_dd, model_dd],
+                    inputs=[dir_input, rank_jd_input, provider_dd, model_dd, gemini_model_dd],
                     outputs=rank_out,
                 )
 
             # ── Tab: Batch Analyze ──────────────────────────────────────────────
-            with gr.Tab("📦 Batch Analyze"):
+            with gr.Tab("Batch analyze"):
                 gr.Markdown(
                     "Run the **full 4-step analysis** (profiles, gap analysis, bullets, interview "
                     "prep) for every resume in a folder against one job description — a separate "
@@ -320,24 +374,23 @@ def build_demo() -> gr.Blocks:
                             file_types=ACCEPTED_TYPES,
                         )
 
-                batch_provider_dd = gr.Dropdown(
-                    choices=PROVIDER_CHOICES,
-                    value=os.getenv("LLM_PROVIDER", "auto"),
-                    label="LLM Provider",
-                    info="'auto' uses local Ollama if running, then Gemini",
-                )
-
                 batch_btn = gr.Button("📦 Batch Analyze", variant="secondary")
                 batch_out = gr.Markdown(label="Batch Results")
 
                 batch_btn.click(
                     fn=workers.batch_analyze_fn,
-                    inputs=[batch_dir_input, batch_jd_input, batch_provider_dd, model_dd],
+                    inputs=[
+                        batch_dir_input,
+                        batch_jd_input,
+                        provider_dd,
+                        model_dd,
+                        gemini_model_dd,
+                    ],
                     outputs=batch_out,
                 )
 
             # ── Tab: Compare Job Descriptions ──────────────────────────────────
-            with gr.Tab("📑 Compare JDs"):
+            with gr.Tab("Compare jobs"):
                 gr.Markdown(
                     "Score **one resume** against **several job descriptions** at once, to see "
                     "which posting it fits best — the mirror image of Rank Resumes."
@@ -356,13 +409,6 @@ def build_demo() -> gr.Blocks:
                             file_count="multiple",
                         )
 
-                compare_provider_dd = gr.Dropdown(
-                    choices=PROVIDER_CHOICES,
-                    value=os.getenv("LLM_PROVIDER", "auto"),
-                    label="LLM Provider",
-                    info="'auto' uses local Ollama if running, then Gemini",
-                )
-
                 compare_btn = gr.Button("📑 Compare", variant="secondary")
                 compare_out = gr.Markdown(label="Comparison Results")
 
@@ -371,14 +417,15 @@ def build_demo() -> gr.Blocks:
                     inputs=[
                         compare_resume_input,
                         compare_jd_inputs,
-                        compare_provider_dd,
+                        provider_dd,
                         model_dd,
+                        gemini_model_dd,
                     ],
                     outputs=compare_out,
                 )
 
             # ── Tab: More Tools ────────────────────────────────────────────────
-            with gr.Tab("🧰 More Tools"):
+            with gr.Tab("More tools"):
                 with gr.Tabs():
                     with gr.Tab("🕘 History"):
                         gr.Markdown(
@@ -391,15 +438,15 @@ def build_demo() -> gr.Blocks:
                         history_run_dd = gr.Dropdown(label="Past runs", choices=[])
 
                         with gr.Tabs():
-                            with gr.Tab("🔍 Gap Analysis"):
+                            with gr.Tab("Gap analysis"):
                                 history_gap_out = gr.Markdown()
-                            with gr.Tab("📝 Resume Profile"):
+                            with gr.Tab("Resume profile"):
                                 history_resume_out = gr.Markdown()
-                            with gr.Tab("💼 Job Profile"):
+                            with gr.Tab("Job profile"):
                                 history_job_out = gr.Markdown()
-                            with gr.Tab("✏️ Resume Bullets"):
+                            with gr.Tab("Tailored bullets"):
                                 history_bullets_out = gr.Markdown()
-                            with gr.Tab("🎤 Interview Prep"):
+                            with gr.Tab("Interview prep"):
                                 history_interview_out = gr.Markdown()
 
                         history_refresh_btn.click(

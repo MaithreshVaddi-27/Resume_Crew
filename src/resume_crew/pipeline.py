@@ -37,7 +37,11 @@ def _render_prompt(name: str, **variables: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-def build_llm(provider: str | None = None, model: str | None = None) -> tuple[Any, str]:
+def build_llm(
+    provider: str | None = None,
+    model: str | None = None,
+    gemini_model: str | None = None,
+) -> tuple[Any, str]:
     """Pick Ollama or Gemini and return ``(llm_instance, provider_name)``.
 
     Reads resolved settings from :func:`config.load_settings` so provider
@@ -57,7 +61,9 @@ def build_llm(provider: str | None = None, model: str | None = None) -> tuple[An
 
     base_url = settings.ollama_base_url
     ollama_model = model or settings.ollama_model
-    gemini_model = settings.gemini_model
+    gemini_model = gemini_model or settings.gemini_model
+    if gemini_model.startswith("gemini/"):
+        gemini_model = gemini_model.removeprefix("gemini/")
     gemini_key = settings.gemini_api_key
 
     ollama_available = ollama_is_running(base_url)
