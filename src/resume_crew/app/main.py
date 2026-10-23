@@ -32,6 +32,7 @@ from resume_crew.document_reader import SUPPORTED_DOCUMENT_EXTENSIONS  # noqa: E
 
 PROVIDER_CHOICES = ["auto", "ollama", "gemini"]
 ACCEPTED_TYPES = list(SUPPORTED_DOCUMENT_EXTENSIONS)
+LOCAL_MODELS, DEFAULT_LOCAL_MODEL = workers.local_model_choices()
 
 _CSS_PATH = Path(__file__).resolve().parent / "styles.css"
 _CUSTOM_CSS = _CSS_PATH.read_text(encoding="utf-8") if _CSS_PATH.is_file() else ""
@@ -60,6 +61,23 @@ def build_demo() -> gr.Blocks:
             <p>Grounded, evidence-based resume &amp; job description analysis powered by AI</p>
         </div>
         """)
+
+        with gr.Row(elem_classes=["model-toolbar"]):
+            model_dd = gr.Dropdown(
+                choices=LOCAL_MODELS,
+                value=DEFAULT_LOCAL_MODEL,
+                label="Local Ollama Model",
+                info="Installed models from your local Ollama server",
+                allow_custom_value=False,
+                scale=4,
+                elem_id="model-select",
+            )
+            refresh_models_btn = gr.Button("↻ Refresh models", scale=1, variant="secondary")
+        refresh_models_btn.click(
+            fn=workers.refresh_local_models,
+            inputs=[model_dd],
+            outputs=[model_dd],
+        )
 
         with gr.Tabs():
             # ── Tab 1: Analyze ─────────────────────────────────────────────────
@@ -162,7 +180,7 @@ def build_demo() -> gr.Blocks:
 
                 analyze_btn.click(
                     fn=workers.analyze_stream,
-                    inputs=[resume_input, jd_input, provider_dd, cancel_event_state],
+                    inputs=[resume_input, jd_input, provider_dd, model_dd, cancel_event_state],
                     outputs=analyze_outputs,
                 )
                 cancel_btn.click(
@@ -240,6 +258,7 @@ def build_demo() -> gr.Blocks:
                         build_notes_input,
                         build_jd_input,
                         build_provider_dd,
+                        model_dd,
                     ],
                     outputs=build_outputs,
                 )
@@ -276,7 +295,7 @@ def build_demo() -> gr.Blocks:
 
                 rank_btn.click(
                     fn=workers.rank_resumes_fn,
-                    inputs=[dir_input, rank_jd_input, rank_provider_dd],
+                    inputs=[dir_input, rank_jd_input, rank_provider_dd, model_dd],
                     outputs=rank_out,
                 )
 
@@ -313,7 +332,7 @@ def build_demo() -> gr.Blocks:
 
                 batch_btn.click(
                     fn=workers.batch_analyze_fn,
-                    inputs=[batch_dir_input, batch_jd_input, batch_provider_dd],
+                    inputs=[batch_dir_input, batch_jd_input, batch_provider_dd, model_dd],
                     outputs=batch_out,
                 )
 
@@ -349,88 +368,98 @@ def build_demo() -> gr.Blocks:
 
                 compare_btn.click(
                     fn=workers.compare_jds_fn,
-                    inputs=[compare_resume_input, compare_jd_inputs, compare_provider_dd],
+                    inputs=[
+                        compare_resume_input,
+                        compare_jd_inputs,
+                        compare_provider_dd,
+                        model_dd,
+                    ],
                     outputs=compare_out,
                 )
 
-            # ── Tab: History ────────────────────────────────────────────────────
-            with gr.Tab("🕘 History"):
-                gr.Markdown(
-                    "Browse past analysis runs saved under `output/` and see your score trend."
-                )
-
-                history_refresh_btn = gr.Button("🔄 Refresh", variant="secondary")
-                history_status = gr.Markdown()
-                history_trend_plot = gr.Plot(label="Score trend")
-                history_run_dd = gr.Dropdown(label="Past runs", choices=[])
-
+            # ── Tab: More Tools ────────────────────────────────────────────────
+            with gr.Tab("🧰 More Tools"):
                 with gr.Tabs():
-                    with gr.Tab("🔍 Gap Analysis"):
-                        history_gap_out = gr.Markdown()
-                    with gr.Tab("📝 Resume Profile"):
-                        history_resume_out = gr.Markdown()
-                    with gr.Tab("💼 Job Profile"):
-                        history_job_out = gr.Markdown()
-                    with gr.Tab("✏️ Resume Bullets"):
-                        history_bullets_out = gr.Markdown()
-                    with gr.Tab("🎤 Interview Prep"):
-                        history_interview_out = gr.Markdown()
+                    with gr.Tab("🕘 History"):
+                        gr.Markdown(
+                            "Browse past analysis runs saved under `output/` and see your score trend."
+                        )
 
-                history_refresh_btn.click(
-                    fn=workers.refresh_history_fn,
-                    inputs=[],
-                    outputs=[history_run_dd, history_status, history_trend_plot],
-                )
-                history_run_dd.change(
-                    fn=workers.load_history_run_fn,
-                    inputs=[history_run_dd],
-                    outputs=[
-                        history_gap_out,
-                        history_resume_out,
-                        history_job_out,
-                        history_bullets_out,
-                        history_interview_out,
-                    ],
-                )
-                demo.load(
-                    fn=workers.refresh_history_fn,
-                    inputs=[],
-                    outputs=[history_run_dd, history_status, history_trend_plot],
-                )
+                        history_refresh_btn = gr.Button("🔄 Refresh", variant="secondary")
+                        history_status = gr.Markdown()
+                        history_trend_plot = gr.Plot(label="Score trend")
+                        history_run_dd = gr.Dropdown(label="Past runs", choices=[])
 
-            # ── Tab: Hardware ───────────────────────────────────────────────────
-            with gr.Tab("🖥️ Hardware"):
-                gr.Markdown("Detects your GPU, memory, and recommends an Ollama compute profile.")
+                        with gr.Tabs():
+                            with gr.Tab("🔍 Gap Analysis"):
+                                history_gap_out = gr.Markdown()
+                            with gr.Tab("📝 Resume Profile"):
+                                history_resume_out = gr.Markdown()
+                            with gr.Tab("💼 Job Profile"):
+                                history_job_out = gr.Markdown()
+                            with gr.Tab("✏️ Resume Bullets"):
+                                history_bullets_out = gr.Markdown()
+                            with gr.Tab("🎤 Interview Prep"):
+                                history_interview_out = gr.Markdown()
 
-                hw_btn = gr.Button("🔍 Detect Hardware", variant="secondary")
-                hw_out = gr.Markdown()
+                        history_refresh_btn.click(
+                            fn=workers.refresh_history_fn,
+                            inputs=[],
+                            outputs=[history_run_dd, history_status, history_trend_plot],
+                        )
+                        history_run_dd.change(
+                            fn=workers.load_history_run_fn,
+                            inputs=[history_run_dd],
+                            outputs=[
+                                history_gap_out,
+                                history_resume_out,
+                                history_job_out,
+                                history_bullets_out,
+                                history_interview_out,
+                            ],
+                        )
+                        demo.load(
+                            fn=workers.refresh_history_fn,
+                            inputs=[],
+                            outputs=[history_run_dd, history_status, history_trend_plot],
+                        )
 
-                def _check_hw() -> str:
-                    from resume_crew.hardware import (  # noqa: PLC0415
-                        ollama_is_running,
-                        resolve_ollama_profile,
-                    )
+                    with gr.Tab("🖥️ Hardware"):
+                        gr.Markdown(
+                            "Detects your GPU, memory, and recommends an Ollama compute profile."
+                        )
 
-                    profile = resolve_ollama_profile("auto")
-                    hw = profile["hardware"]
-                    base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-                    ollama_status = (
-                        "🟢 Reachable" if ollama_is_running(base_url) else "🔴 Not reachable"
-                    )
-                    return (
-                        f"## Hardware Detection\n\n"
-                        f"| Property | Value |\n|---|---|\n"
-                        f"| CUDA | {'✅ Available — ' + str(hw.get('cuda_name', '')) if hw['cuda'] else '❌ Not found'} |\n"
-                        f"| CUDA VRAM | {hw.get('cuda_vram_gb') or 'N/A'} GB |\n"
-                        f"| Apple Metal | {'✅ Available' if hw['mps'] else '❌ Not found'} |\n"
-                        f"| CPU threads | {hw['cpu_threads']} |\n"
-                        f"| System RAM | {hw.get('system_memory_gb') or 'Unknown'} GB |\n"
-                        f"| Ollama server | {ollama_status} |\n\n"
-                        f"**Recommended profile:** `{profile['name'].upper()}`  "
-                        f"— Context window: `{profile['context']} tokens`"
-                    )
+                        hw_btn = gr.Button("🔍 Detect Hardware", variant="secondary")
+                        hw_out = gr.Markdown()
 
-                hw_btn.click(fn=_check_hw, inputs=[], outputs=hw_out)
+                        def _check_hw() -> str:
+                            from resume_crew.hardware import (  # noqa: PLC0415
+                                ollama_is_running,
+                                resolve_ollama_profile,
+                            )
+
+                            profile = resolve_ollama_profile("auto")
+                            hw = profile["hardware"]
+                            base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+                            ollama_status = (
+                                "🟢 Reachable"
+                                if ollama_is_running(base_url)
+                                else "🔴 Not reachable"
+                            )
+                            return (
+                                f"## Hardware Detection\n\n"
+                                f"| Property | Value |\n|---|---|\n"
+                                f"| CUDA | {'✅ Available — ' + str(hw.get('cuda_name', '')) if hw['cuda'] else '❌ Not found'} |\n"
+                                f"| CUDA VRAM | {hw.get('cuda_vram_gb') or 'N/A'} GB |\n"
+                                f"| Apple Metal | {'✅ Available' if hw['mps'] else '❌ Not found'} |\n"
+                                f"| CPU threads | {hw['cpu_threads']} |\n"
+                                f"| System RAM | {hw.get('system_memory_gb') or 'Unknown'} GB |\n"
+                                f"| Ollama server | {ollama_status} |\n\n"
+                                f"**Recommended profile:** `{profile['name'].upper()}`  "
+                                f"— Context window: `{profile['context']} tokens`"
+                            )
+
+                        hw_btn.click(fn=_check_hw, inputs=[], outputs=hw_out)
 
         # ── Footer ─────────────────────────────────────────────────────────────
         gr.HTML("""

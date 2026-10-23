@@ -37,7 +37,7 @@ def _render_prompt(name: str, **variables: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-def build_llm(provider: str | None = None) -> tuple[Any, str]:
+def build_llm(provider: str | None = None, model: str | None = None) -> tuple[Any, str]:
     """Pick Ollama or Gemini and return ``(llm_instance, provider_name)``.
 
     Reads resolved settings from :func:`config.load_settings` so provider
@@ -56,7 +56,7 @@ def build_llm(provider: str | None = None) -> tuple[Any, str]:
     from crewai import LLM
 
     base_url = settings.ollama_base_url
-    ollama_model = settings.ollama_model
+    ollama_model = model or settings.ollama_model
     gemini_model = settings.gemini_model
     gemini_key = settings.gemini_api_key
 
@@ -68,6 +68,11 @@ def build_llm(provider: str | None = None) -> tuple[Any, str]:
             raise RuntimeError(
                 f"Ollama is not reachable at {base_url}. Start Ollama and pull {ollama_model}."
             )
+        if model:
+            from resume_crew.hardware import list_ollama_models
+
+            if model not in list_ollama_models(base_url, settings.ollama_timeout):
+                raise ValueError(f"Ollama model {model!r} is not installed locally.")
         return LLM(model=f"ollama/{ollama_model}", base_url=base_url), "ollama"
 
     if not gemini_key:

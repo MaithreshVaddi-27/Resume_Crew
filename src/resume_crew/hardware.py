@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import platform
 import subprocess
@@ -24,6 +25,22 @@ def ollama_is_running(base_url: str, timeout: float | None = None) -> bool:
             return True
     except (urllib.error.URLError, OSError, TimeoutError):
         return False
+
+
+def list_ollama_models(base_url: str, timeout: float = 3.0) -> list[str]:
+    """Return names of locally installed Ollama models, or an empty list if unavailable."""
+    try:
+        with urllib.request.urlopen(  # noqa: S310
+            f"{base_url.rstrip('/')}/api/tags", timeout=timeout
+        ) as response:
+            payload = json.load(response)
+    except (urllib.error.URLError, OSError, TimeoutError, json.JSONDecodeError):
+        return []
+    return sorted(
+        model["name"]
+        for model in payload.get("models", [])
+        if isinstance(model, dict) and isinstance(model.get("name"), str)
+    )
 
 
 def _system_memory_gb() -> float | None:

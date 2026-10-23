@@ -35,10 +35,12 @@ _ensure_src_on_path()
 
 import gradio as gr  # noqa: E402
 
+from resume_crew.config import load_settings  # noqa: E402
 from resume_crew.document_reader import (  # noqa: E402
     SUPPORTED_DOCUMENT_EXTENSIONS,
     extract_text,
 )
+from resume_crew.hardware import list_ollama_models  # noqa: E402
 from resume_crew.pipeline import (  # noqa: E402
     AnalysisCancelled,
     build_docx_report,
@@ -66,6 +68,23 @@ from resume_crew.storage import (  # noqa: E402
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+
+def local_model_choices() -> tuple[list[str], str]:
+    """Return installed local models, falling back to the configured Ollama model."""
+    settings = load_settings()
+    models = list_ollama_models(settings.ollama_base_url, settings.ollama_timeout)
+    if settings.ollama_model not in models:
+        models.insert(0, settings.ollama_model)
+    return models, settings.ollama_model
+
+
+def refresh_local_models(current: str | None) -> Any:
+    """Refresh the model dropdown, preserving a still-installed selection."""
+    models, default_model = local_model_choices()
+    selected = current if current in models else default_model
+    return gr.update(choices=models, value=selected)
+
 
 EMPTY_TABS = (
     "",
@@ -108,6 +127,7 @@ def _run_analysis_thread(
     resume_path: str,
     job_path: str,
     provider: str,
+    model: str,
     step_q: queue.Queue[str | None],
     result_q: queue.Queue[tuple[Any, ...]],
     cancel_event: threading.Event,
@@ -125,7 +145,7 @@ def _run_analysis_thread(
         job_title = first_meaningful_line(job_text, "Target Role")
 
         step_q.put(f"🤖 Connecting to {provider.title()} LLM...")
-        llm, resolved_provider = build_llm(provider)
+        llm, resolved_provider = build_llm(provider, model)
         step_q.put(f"✅ Connected via {resolved_provider.title()}. Starting 4-step analysis...")
 
         def on_step(msg: str) -> None:
@@ -188,7 +208,8 @@ def analyze_stream(
     resume_file: Any,
     jd_file: Any,
     provider: str,
-    cancel_event_state: Any,
+    model: str = "",
+    cancel_event_state: Any = None,
 ) -> Iterator[Any]:
     """Generator: streams progress to the UI while a background thread runs the pipeline."""
     resume_path = _get_file_path(resume_file)
@@ -207,7 +228,7 @@ def analyze_stream(
 
     thread = threading.Thread(
         target=_run_analysis_thread,
-        args=(resume_path, jd_path, provider, step_q, result_q, cancel_event),
+        args=(resume_path, jd_path, provider, model or "", step_q, result_q, cancel_event),
         daemon=True,
     )
     thread.start()
@@ -308,7 +329,9 @@ def cancel_analysis(cancel_event_state: threading.Event | None) -> str:
 # ---------------------------------------------------------------------------
 
 
-def rank_resumes_fn(directory_path: str, jd_file: Any, provider: str) -> Iterator[Any]:
+def rank_resumes_fn(
+    directory_path: str, jd_file: Any, provider: str, model: str = ""
+) -> Iterator[Any]:
     """Rank all resumes in a folder against a job description using the LLM."""
     if not directory_path or not directory_path.strip():
         yield "⚠️ Please enter a folder path containing resume files."
@@ -334,7 +357,7 @@ def rank_resumes_fn(directory_path: str, jd_file: Any, provider: str) -> Iterato
             yield "No supported resume files found in that directory."
             return
 
-        llm, resolved_provider = build_llm(provider)
+        llm, resolved_provider = build_llm(provider, model)
 
         yield f"🤖 Connecting to {provider.title()} LLM..."
 
@@ -355,7 +378,9 @@ def rank_resumes_fn(directory_path: str, jd_file: Any, provider: str) -> Iterato
 # ---------------------------------------------------------------------------
 
 
-def batch_analyze_fn(directory_path: str, jd_file: Any, provider: str) -> Iterator[Any]:
+def batch_analyze_fn(
+    directory_path: str, jd_file: Any, provider: str, model: str = ""
+) -> Iterator[Any]:
     """Run the FULL 4-step analysis for every resume in a folder against one JD."""
     if not directory_path or not directory_path.strip():
         yield "⚠️ Please enter a folder path containing resume files."
@@ -388,7 +413,7 @@ def batch_analyze_fn(directory_path: str, jd_file: Any, provider: str) -> Iterat
             run_llm_analysis,
         )
 
-        llm, resolved_provider = build_llm(provider)
+        llm, resolved_provider = build_llm(provider, model)
         job_title = first_meaningful_line(job_text, "Target Role")
 
         results: list[tuple[str, float | None, str]] = []
@@ -443,7 +468,9 @@ def batch_analyze_fn(directory_path: str, jd_file: Any, provider: str) -> Iterat
 # ---------------------------------------------------------------------------
 
 
-def compare_jds_fn(resume_file: Any, jd_files: list[Any], provider: str) -> Iterator[Any]:
+def compare_jds_fn(
+    resume_file: Any, jd_files: list[Any], provider: str, model: str = ""
+) -> Iterator[Any]:
     """Score one resume against several job descriptions to see which fits best."""
     resume_path = _get_file_path(resume_file)
     if not resume_path:
@@ -456,7 +483,7 @@ def compare_jds_fn(resume_file: Any, jd_files: list[Any], provider: str) -> Iter
     try:
         resume_text = extract_text(resume_path)
 
-        llm, resolved_provider = build_llm(provider)
+        llm, resolved_provider = build_llm(provider, model)
 
         yield f"🤖 Connecting to {provider.title()} LLM..."
 
@@ -499,6 +526,7 @@ def build_resume_fn(
     notes_text: str,
     jd_file: Any,
     provider: str,
+    model: str = "",
 ) -> Iterator[tuple[str, str, str, str | None, str | None]]:
     """Draft a tailored resume from the candidate's own material + a target JD.
 
@@ -534,7 +562,7 @@ def build_resume_fn(
         )
 
         yield f"🤖 Connecting to {provider.title()} LLM...", "", "", None, None
-        llm, resolved_provider = build_llm(provider)
+        llm, resolved_provider = build_llm(provider, model)
         yield (
             f"✅ Connected via {resolved_provider.title()}. Drafting tailored resume...",
             "",
