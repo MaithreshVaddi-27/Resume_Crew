@@ -19,7 +19,7 @@ load_dotenv()
 
 import gradio as gr  # noqa: E402
 
-from resume_crew.config import load_settings  # noqa: E402
+from resume_crew.config import MAX_EXTRACTED_CHARACTERS, load_settings  # noqa: E402
 from resume_crew.document_reader import (  # noqa: E402
     SUPPORTED_DOCUMENT_EXTENSIONS,
     extract_text,
@@ -554,6 +554,16 @@ def build_resume_fn(
         if notes:
             source_parts.append(notes)
         source_text = "\n\n".join(source_parts)
+        if len(source_text) > MAX_EXTRACTED_CHARACTERS:
+            yield (
+                f"⚠️ Resume and notes exceed the {MAX_EXTRACTED_CHARACTERS:,}-character limit. "
+                "Shorten the source material and try again.",
+                "",
+                "",
+                None,
+                None,
+            )
+            return
         job_text = extract_text(jd_path)
 
         from resume_crew.pipeline import (  # noqa: PLC0415
@@ -686,5 +696,5 @@ def load_history_run_fn(selected_path: str) -> tuple[str, str, str, str, str]:
             files.get("tailored_resume_bullets.md", "_(not found)_"),
             files.get("interview_preparation.md", "_(not found)_"),
         )
-    except (FileNotFoundError, NotADirectoryError) as exc:
+    except (FileNotFoundError, NotADirectoryError, ValueError) as exc:
         return f"⚠️ {exc}", "", "", "", ""

@@ -1,5 +1,7 @@
 import pytest
 
+from resume_crew import pipeline
+from resume_crew.app import workers
 from resume_crew.pipeline import split_writer_output
 
 
@@ -14,6 +16,25 @@ def test_splits_expected_sections() -> None:
 def test_rejects_malformed_writer_output() -> None:
     with pytest.raises(ValueError, match="invalid"):
         split_writer_output("Some advice")
+
+
+def test_resume_builder_rejects_oversized_combined_source(monkeypatch) -> None:
+    monkeypatch.setattr(workers, "MAX_EXTRACTED_CHARACTERS", 10)
+    monkeypatch.setattr(
+        workers, "_get_file_path", lambda file_obj: "resume.txt" if file_obj else ""
+    )
+    monkeypatch.setattr(workers, "extract_text", lambda _path: "123456")
+    monkeypatch.setattr(
+        pipeline,
+        "build_llm",
+        lambda *_args: (_ for _ in ()).throw(AssertionError("LLM must not be called")),
+    )
+
+    outputs = list(workers.build_resume_fn("resume.txt", "12345", "job.txt", "ollama"))
+
+    assert len(outputs) == 1
+    assert "exceed the 10-character limit" in outputs[0][0]
+    assert outputs[0][1:] == ("", "", None, None)
 
 
 def test_word_export_is_not_part_of_the_pipeline_module() -> None:

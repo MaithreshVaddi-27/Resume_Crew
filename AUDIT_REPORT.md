@@ -1,35 +1,38 @@
 # Resume_Crew — Engineering Audit
 
-**Date:** 2026-10-24
-**Scope:** Whole tracked project; read-only source review plus attempted automated verification.
-**Assumption:** Local-first personal tool; public deployment changes the priorities.
+**Original audit date:** 2026-10-24
+**Follow-up status:** Includes verified local follow-up changes after `bb831c4`; not all changes are committed.
+**Scope:** Whole tracked project; manual source review plus regression and static checks.
+**Assumption:** Local-first personal tool; public multi-user deployment remains out of scope.
 
 ## Executive summary
 
-The project has a cohesive purpose and a sensible separation between CLI, Gradio workers, deterministic scoring, document extraction, storage, and LLM workflows. Highest-risk findings: public UI sharing does not require authentication, malformed model scores silently become zero, and interrupted report writes can leave incomplete run directories. No fix was applied: this audit followed the Ponytail skill's explicit read-only boundary. A critical fix pass remains necessary after the deployment/privacy assumptions are confirmed.
+The project has a cohesive purpose and a sensible separation between CLI, Gradio workers, deterministic scoring, document extraction, storage, and LLM workflows. The original critical findings have since been addressed: public tunnels require authentication, malformed model scores are rejected, and report writes are staged before publication. Follow-up review also added a size limit for combined resume text and freeform notes in Build Resume, preventing that UI path from bypassing the extracted-text limit. This report records verified changes and remaining review items; it is not a certification of production readiness.
 
-## Phase 0 — Critical
+## Resolved findings
 
-1. **Public UI exposure is unauthenticated by default.** `src/resume_crew/app/main.py` can launch ngrok or Gradio sharing when enabled but only prints a warning if credentials are absent. Resume files/notes contain sensitive personal data. Require authentication before public sharing or require explicit opt-in to unauthenticated exposure. **Not fixed.** Decide whether public sharing is a supported use case.
-2. **Malformed LLM scores are silently ranked as 0%.** `src/resume_crew/pipeline.py::_parse_match_score` assigns `0.0` if `SCORE:` is missing. This hides model contract failures as genuine low scores. Reject malformed outputs and represent failed scoring separately. **Not fixed.**
-3. **Report output can be partially persisted.** CLI/UI create the final run directory and write files directly. Disk errors or process termination can leave partial reports; UI metadata is written afterward. Write to a temporary directory and atomically publish on success, or clean up failed writes. **Not fixed.**
+1. **Unauthenticated public UI exposure — fixed.** `src/resume_crew/app/main.py` exits before opening ngrok or Gradio sharing unless both `GRADIO_AUTH_USER` and `GRADIO_AUTH_PASS` are configured. Local-only launch remains available without credentials. Public sharing still uses a shared local report store and is not suitable for multi-user hosting; see `docs/deployment.md`.
+2. **Malformed LLM scores treated as real scores — fixed.** `src/resume_crew/pipeline.py::_parse_match_score` rejects missing and out-of-range scores; failed rank results remain distinct from numeric scores.
+3. **Partial report writes — fixed for caught write failures.** `src/resume_crew/storage.py::write_run_files` stages files and metadata, then publishes the completed run. Its cleanup path removes the staging and reserved run directories if a write fails. This is not a guarantee against abrupt machine or storage failure during filesystem publication.
+4. **Combined resume and notes exceeded the document text limit — fixed.** `src/resume_crew/app/workers.py::build_resume_fn` checks combined source length before LLM setup and returns a clear limit message.
+5. **History accepted arbitrary local report paths — fixed.** `src/resume_crew/storage.py::read_run_report` now reads only direct child directories under `OUTPUT_ROOT`; the History worker displays a warning for rejected paths. The run list skips malformed metadata and requires the stored directory name to match its containing folder.
 
-## Phase 1 — High priority
+## Remaining review items
 
-- Validate numeric configuration ranges, not just parseability: `OLLAMA_TIMEOUT` currently accepts zero, negative, or non-finite values; `GRADIO_PORT` can be outside valid port range (`src/resume_crew/config.py`).
-- Validate Ollama JSON structure in addition to JSON syntax; a valid but unexpected payload can raise in `list_ollama_models` (`src/resume_crew/hardware.py`).
-- Enforce extracted-text caps incrementally while reading PDFs. The compressed file-size limit does not bound decompressed text or memory (`src/resume_crew/document_reader.py`).
-- Make run-directory creation race-safe by handling `FileExistsError` from atomic `mkdir` rather than checking `exists()` first (`src/resume_crew/storage.py`).
-- Bound the combined resume + free-form notes before sending it to an LLM (`src/resume_crew/app/workers.py::build_resume_fn`).
-- Cancellation currently takes effect between pipeline stages, not during model calls or retry sleeps (`src/resume_crew/pipeline.py`, `src/resume_crew/app/workers.py`). Clarify this limitation in the UI or support cancellable provider calls.
+- Cancellation takes effect between pipeline stages, not during a model call or retry sleep (`src/resume_crew/pipeline.py`, `src/resume_crew/app/workers.py`). The UI should continue to describe this boundary accurately; true in-call cancellation would depend on provider support.
+- Numeric configuration validation is implemented: `OLLAMA_TIMEOUT` must be positive and finite, and `GRADIO_PORT` must be within 1–65535 (`src/resume_crew/config.py`).
+- Ollama model-list parsing handles malformed JSON shapes by returning an empty list, with focused regression coverage (`src/resume_crew/hardware.py`).
+- PDF extraction enforces the character ceiling incrementally across pages (`src/resume_crew/document_reader.py`); the compressed file-size ceiling does not independently bound memory used inside a single page extraction.
+- Run directories use atomic `mkdir` with collision retry (`src/resume_crew/storage.py`).
+- Public tunnels require authentication, but the UI still has shared storage and no per-user isolation. Do not treat basic authentication as multi-user authorization.
 
-## Phase 2 — Quality and operations
+## Quality and operations
 
-- Add focused regression coverage for score parsing failures, malformed Ollama payloads, config boundaries, interrupted writes, concurrent run creation, oversized notes, and incremental PDF limits.
-- Expand CI from Python 3.10 to the actual supported-version range and add package build/install smoke checks.
-- Keep failures visually distinct from low scores in batch/ranking views; error strings currently share the score-note presentation.
-- Document privacy boundaries prominently: Ollama is local; Gemini receives document text; public tunnels expose the UI.
-- Consider optional dependency groups for UI, plots, exports, and ngrok only if minimal CLI installs are a real requirement; update install docs in the same change.
+- Focused regression coverage now exercises score parsing, malformed Ollama payloads, config boundaries, interrupted writes, concurrent run creation, oversized notes, and incremental PDF limits across the test suite.
+- CI currently targets Python 3.10. Add other supported Python versions and package install/build smoke checks if compatibility across that range becomes a release requirement.
+- Review batch/ranking output formatting and accessible error presentation during the remaining UI audit.
+- Privacy boundaries are documented in the README and deployment guide: Ollama is local, Gemini receives extracted text, reports stay in the local output directory, and public tunnels require credentials.
+- Optional dependency groups remain a packaging choice; split them only if minimal CLI installation is an explicit requirement.
 
 ## Phase 3 — Upgrades and downgrades
 
@@ -50,7 +53,9 @@ Estimated complexity reduction: **15–25 lines; 0 dependencies**. Findings are 
 
 ## Verification and limitations
 
-- Reviewed tracked inventory and major execution paths: pipeline, document extraction, scoring, storage, settings, hardware, UI workers/layout, CLI, packaging, tests, and CI.
-- `python -m pytest` was attempted but blocked by the session Bash safety hook/classifier; no test result is claimed.
-- No project code changed. The active Ponytail review explicitly prohibits changes and excludes correctness/security, so critical fixes are documented for a separate implementation pass.
-- Clarification needed: is this strictly local/personal, or should the audit treat public multi-user deployment as a target? The report uses local-first as its baseline.
+- Manually traced the tracked CLI, UI worker, config/provider selection, document extraction, score parsing, report storage, history, deployment, and prompt flows.
+- Regression suite: 40 tests passed, including synthetic coverage for the Build Resume source limit, History path restriction, and malformed run metadata. This full run followed the latest changes.
+- Ruff lint and formatting, Python compilation, and `git diff --check` passed on the current working tree.
+- The public tunnel guard was manually exercised for unauthenticated sharing refusal and local-only startup. No public tunnel was opened.
+- Type checking was not rerun as part of this follow-up; an earlier run was blocked by missing third-party stubs and incompatible installed NumPy stubs. No dependencies were installed.
+- This remains a local-first review, not a complete security certification or validation of multi-user production deployment.

@@ -76,7 +76,7 @@ You only need this if you want to use `--provider gemini`, or as a fallback when
 
 Treat this key like a password: never commit it to Git, share it in chat, or paste it into client-side code. `.env` is already ignored by Git in this project.
 
-> Optional: if you also want a **live public URL** for the Gradio app (via ngrok), grab a free authtoken at [dashboard.ngrok.com](https://dashboard.ngrok.com/get-started/your-authtoken) — see [Live public URL via ngrok](#live-public-url-via-ngrok).
+> Optional: if you need a **public URL** for the Gradio app, ngrok requires an authtoken and both app-login credentials. See [Authenticated public sharing](#authenticated-public-sharing) for setup and privacy requirements.
 
 ## Installation
 

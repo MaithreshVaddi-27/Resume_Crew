@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 import re
 import shutil
 import unicodedata
@@ -107,6 +108,21 @@ def list_report_runs(limit: int = 50) -> list[dict[str, Any]]:
             continue
         try:
             meta = json.loads(meta_path.read_text(encoding="utf-8"))
+            if not isinstance(meta, dict):
+                continue
+            if meta.get("directory", directory.name) != directory.name:
+                continue
+            if not all(
+                isinstance(meta.get(key), str) for key in ("candidate", "job_title", "timestamp")
+            ):
+                continue
+            score = meta.get("score")
+            if (
+                not isinstance(score, (int, float))
+                or not math.isfinite(score)
+                or not 0 <= score <= 100
+            ):
+                continue
             meta["path"] = str(directory)
             runs.append(meta)
         except (json.JSONDecodeError, OSError):
@@ -117,8 +133,11 @@ def list_report_runs(limit: int = 50) -> list[dict[str, Any]]:
 
 
 def read_run_report(directory: str) -> dict[str, str]:
-    """Read all saved Markdown report files for one past run, keyed by filename."""
-    path = Path(directory)
+    """Read Markdown files from one direct child run directory under output/."""
+    path = Path(directory).resolve()
+    output_root = OUTPUT_ROOT.resolve()
+    if path.parent != output_root:
+        raise ValueError(f"'{path}' is not a report run under '{output_root}'.")
     if not path.is_dir():
         raise NotADirectoryError(f"'{path}' is not a directory.")
     files: dict[str, str] = {}
