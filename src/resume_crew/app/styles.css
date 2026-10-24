@@ -25,8 +25,8 @@ body, .gradio-container {
     align-items: center;
     gap: 16px;
     position: relative;
-    padding: 20px 0 22px;
-    margin-bottom: 12px;
+    padding: 28px 0 26px;
+    margin-bottom: 16px;
     border-bottom: 1px solid var(--border);
 }
 #app-header h1 {
@@ -39,8 +39,19 @@ body, .gradio-container {
 #app-header p {
     color: var(--muted) !important;
     margin: 0;
-    font-size: 0.95rem;
+    font-size: 1rem;
+    line-height: 1.5;
 }
+.privacy-note {
+    margin: 0 0 18px !important;
+    padding: 11px 14px !important;
+    border-left: 3px solid var(--accent) !important;
+    background: #192633 !important;
+    color: #d4e0ec !important;
+    border-radius: 0 var(--radius) var(--radius) 0 !important;
+    font-size: 0.92rem !important;
+}
+.privacy-note p { margin: 0 !important; }
 .brand-mark {
     display: grid;
     place-items: center;
@@ -148,7 +159,7 @@ body, .gradio-container {
 }
 
 /* ── Buttons ─────────────────────────────────────────────────────────────── */
-#analyze-btn {
+.primary-action button {
     min-height: 48px;
     background: #315f96 !important;
     border: 1px solid #6f9fd6 !important;
@@ -160,8 +171,8 @@ body, .gradio-container {
     transition: background-color 0.15s ease-out, border-color 0.15s ease-out !important;
     cursor: pointer !important;
 }
-#analyze-btn:hover { background: #3a70ad !important; }
-#rank-btn {
+.primary-action button:hover { background: #3a70ad !important; }
+.secondary-action button {
     background: transparent !important;
     border: 1px solid var(--accent) !important;
     color: var(--accent-2) !important;
@@ -170,15 +181,16 @@ body, .gradio-container {
     padding: 11px 22px !important;
     transition: background 0.15s !important;
 }
-#rank-btn:hover { background: var(--bg-raised) !important; }
+.secondary-action button:hover { background: var(--bg-raised) !important; }
 
 /* ── Progress box ─────────────────────────────────────────────────────────── */
 #progress-box textarea {
     background: #060a13 !important;
     border: 1px solid var(--border) !important;
     color: #cbd5e1 !important;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
-    font-size: 0.82rem !important;
+    font-family: 'Avenir Next', 'Segoe UI', sans-serif !important;
+    font-size: 0.92rem !important;
+    line-height: 1.55 !important;
     border-radius: 6px !important;
 }
 
@@ -221,8 +233,7 @@ body, .gradio-container {
 .gradio-container button { min-height: 44px; }
 ::selection { background: #315f96; color: #fff; }
 @media (max-width: 640px) {
-    #app-header { align-items: flex-start; gap: 12px; }
-    .header-note { display: none; }
+    #app-header { align-items: flex-start; gap: 12px; padding: 20px 0; }
     .document-row { padding: 10px !important; gap: 10px !important; }
     .action-row { gap: 8px !important; }
     #settings-accordion .model-toolbar { gap: 8px !important; }

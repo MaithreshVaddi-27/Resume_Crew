@@ -220,8 +220,8 @@ NGROK_AUTHTOKEN=your_ngrok_authtoken
 
 # Recommended if you use NGROK_AUTHTOKEN or GRADIO_SHARE — a public URL has
 # no login by default, so set both to require a username/password.
-GRADIO_AUTH_USER=user
-GRADIO_AUTH_PASS=user@123
+GRADIO_AUTH_USER=replace_with_a_username
+GRADIO_AUTH_PASS=replace_with_a_strong_password
 ```
 
 `.env` is listed in `.gitignore` — never commit it, since it can hold API keys.
@@ -284,7 +284,7 @@ python app.py
 
 The UI opens automatically at `http://localhost:7860` and includes:
 
-- **Analyze Resume** — upload resume + JD, pick provider, watch step-by-step progress, view results across 8 sub-tabs (Score, Resume Profile, Job Profile, Gap Analysis, Resume Bullets, Interview Prep, Resume Highlights, Full Report). Includes a **Cancel** button to stop a run between pipeline steps. The Full Report tab offers **PDF (default)** and **Word (.docx)** downloads.
+- **Analyze Resume** — upload resume + JD, pick provider, watch step-by-step progress, view results across 8 sub-tabs (Score, Resume Profile, Job Profile, Gap Analysis, Tailored Bullets, Interview Prep, Resume Evidence, Full Report). Includes a **Cancel** button to stop a run between pipeline steps. The Full Report tab offers **PDF (default)** and **Word (.docx)** downloads.
 - **Build Resume** — draft a resume tailored to a target job description, using *only* facts from an uploaded resume and/or freeform notes you provide. Nothing is invented: no employer, date, skill, or number appears unless it's in your source material.
 - **Rank Resumes** — score a local folder of resumes against a JD, one lightweight LLM call per resume.
 - **Batch Analyze** — run the *full* 4-step analysis for every resume in a folder against one JD, saving a separate report per resume.
@@ -350,7 +350,7 @@ CrewAI execution traces and telemetry are disabled by default, both in `.env.exa
 - With `--provider ollama`, resume and job text stay on the local machine, subject to your local Ollama installation.
 - With `--provider gemini`, source text is sent to Google — use it only when that's acceptable.
 - Reports are created in `output/` and can contain personal information. That folder is ignored by Git.
-- The current version does not persist analysis history outside your own `output/` folder.
+- History reads saved reports and score metadata from the local `output/` folder. The app does not send that history to a separate storage service.
 
 ## Troubleshooting
 

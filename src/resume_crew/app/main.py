@@ -31,6 +31,10 @@ from resume_crew.app import workers  # noqa: E402
 from resume_crew.document_reader import SUPPORTED_DOCUMENT_EXTENSIONS  # noqa: E402
 
 PROVIDER_CHOICES = ["auto", "ollama", "gemini"]
+PRIVACY_NOTICE = (
+    "Ollama keeps analysis on this machine. Gemini sends extracted document text "
+    "to Google. Automatic may use Gemini if Ollama is unavailable."
+)
 GEMINI_MODELS = [
     ("Gemini 3.8 Flash · recommended", "gemini/gemini-3.8-flash"),
     ("Gemini 3.6 Flash", "gemini/gemini-3.6-flash"),
@@ -69,9 +73,8 @@ def build_demo() -> gr.Blocks:
             <div class="brand-mark" aria-hidden="true">RC</div>
             <div>
                 <h1>Resume Crew</h1>
-                <p>Evidence-led resume and job matching</p>
+                <p>Make your experience easier to match to the role.</p>
             </div>
-            <div class="header-note">LOCAL-FIRST ANALYSIS</div>
         </header>
         """)
 
@@ -145,8 +148,13 @@ def build_demo() -> gr.Blocks:
             with gr.Tab("Analyze", elem_classes=["workflow-tab"]):
                 gr.Markdown("## Compare a resume with a role", elem_classes=["section-heading"])
                 gr.Markdown(
-                    "Upload the resume and complete job posting to see matched evidence, gaps, and a grounded fit score.",
+                    "Start with the evidence you already have. We’ll surface relevant experience, "
+                    "gaps to consider, and questions to prepare for — without inventing credentials.",
                     elem_classes=["section-intro"],
+                )
+                gr.Markdown(
+                    f"{PRIVACY_NOTICE} Choose Ollama to keep documents local.",
+                    elem_classes=["privacy-note"],
                 )
                 with gr.Row(elem_classes=["document-row"]):
                     with gr.Column(scale=1):
@@ -165,7 +173,7 @@ def build_demo() -> gr.Blocks:
                 with gr.Row(elem_classes=["action-row"]):
                     analyze_btn = gr.Button(
                         "Analyze match",
-                        elem_id="analyze-btn",
+                        elem_classes=["primary-action"],
                         scale=3,
                         variant="primary",
                     )
@@ -178,16 +186,19 @@ def build_demo() -> gr.Blocks:
                 cancel_event_state = gr.State(None)
 
                 progress_box = gr.Textbox(
-                    label="Progress",
+                    label="Analysis progress",
                     lines=5,
                     max_lines=12,
                     interactive=False,
                     elem_id="progress-box",
-                    placeholder="Progress will appear here once analysis starts...",
+                    placeholder="Choose both files, then select Analyze match.",
                 )
 
                 # ── Results ───────────────────────────────────────────────────
-                gr.Markdown("## Match report", elem_classes=["result-heading"])
+                gr.Markdown(
+                    "## Your match report",
+                    elem_classes=["result-heading"],
+                )
                 with gr.Tabs(elem_classes=["result-tabs"]):
                     with gr.Tab("Score"):
                         score_out = gr.Markdown(elem_id="score-display")
@@ -259,44 +270,48 @@ def build_demo() -> gr.Blocks:
             # ── Tab: Build Resume ────────────────────────────────────────────────
             with gr.Tab("Build resume"):
                 gr.Markdown(
-                    "Draft a resume **tailored to a target job** — reordered and phrased "
-                    "for relevance, but built **only from facts you provide**. Nothing is "
-                    "invented: no employer, date, skill, or number appears unless it's in "
-                    "your uploaded resume or notes below."
+                    "## Shape your experience for a specific role", elem_classes=["section-heading"]
+                )
+                gr.Markdown(PRIVACY_NOTICE, elem_classes=["privacy-note"])
+
+                gr.Markdown(
+                    "Add an existing resume or background notes, then upload the job description. "
+                    "The draft can reorganize your experience, but it won’t add facts you haven’t provided.",
+                    elem_classes=["section-intro"],
                 )
 
                 with gr.Row():
                     with gr.Column(scale=1):
                         build_resume_input = gr.File(
-                            label="Existing Resume (optional if you fill in notes below)",
+                            label="Existing resume (optional)",
                             file_types=ACCEPTED_TYPES,
                         )
                         build_notes_input = gr.Textbox(
-                            label="Background Notes (optional if you upload a resume above)",
+                            label="Background notes (optional)",
+                            info="Add roles, dates, skills, education, or results you want the draft to use.",
                             placeholder=(
-                                "e.g. Worked as a data analyst at Acme Corp 2021-2023: built "
-                                "SQL dashboards, automated weekly reports. B.Sc. Statistics, "
-                                "XYZ University, 2021. Skills: Python, SQL, Excel, Tableau."
+                                "Data analyst at Acme Corp, 2021–2023: built SQL dashboards and "
+                                "automated weekly reports. B.Sc. Statistics, XYZ University, 2021."
                             ),
                             lines=6,
                         )
                     with gr.Column(scale=1):
                         build_jd_input = gr.File(
-                            label="Target Job Description",
+                            label="Target job description",
                             file_types=ACCEPTED_TYPES,
                         )
 
-                build_btn = gr.Button("✨ Draft Resume", elem_id="analyze-btn", variant="primary")
+                build_btn = gr.Button(
+                    "Draft resume", elem_classes=["primary-action"], variant="primary"
+                )
                 build_progress = gr.Markdown()
 
                 with gr.Tabs():
-                    with gr.Tab("📝 Drafted Resume"):
+                    with gr.Tab("Drafted resume"):
                         build_resume_out = gr.Markdown()
-                        build_pdf_out = gr.File(label="⬇️ Download Resume (PDF)", interactive=False)
-                        build_docx_out = gr.File(
-                            label="⬇️ Download Resume (.docx)", interactive=False
-                        )
-                    with gr.Tab("📊 Match Score vs Target Job"):
+                        build_pdf_out = gr.File(label="Download resume (PDF)", interactive=False)
+                        build_docx_out = gr.File(label="Download resume (Word)", interactive=False)
+                    with gr.Tab("Match score"):
                         build_score_out = gr.Markdown()
 
                 build_outputs = [
@@ -324,17 +339,21 @@ def build_demo() -> gr.Blocks:
                     outputs=build_outputs,
                 )
 
-            # ── Tab: Rank Resumes ────────────────────────────────────────────
+            # ── Tab: Rank resumes ────────────────────────────────────────────
             with gr.Tab("Rank resumes"):
                 gr.Markdown(
-                    "Score every resume in a folder against a job description **using the LLM**. "
-                    "Each resume gets its own scoring call, so this can take a while for large folders."
+                    "## Find the strongest fit in a folder", elem_classes=["section-heading"]
+                )
+                gr.Markdown(
+                    "Score each resume against one job description. This is faster than a full "
+                    "analysis and works best with a small folder of supported files.",
+                    elem_classes=["section-intro"],
                 )
 
                 with gr.Row():
                     with gr.Column(scale=2):
                         dir_input = gr.Textbox(
-                            label="Resume Folder Path",
+                            label="Folder containing resumes",
                             placeholder="e.g. C:\\Users\\you\\Resumes  or  ./samples/Resumes",
                             elem_id="dir-input",
                         )
@@ -344,7 +363,9 @@ def build_demo() -> gr.Blocks:
                             file_types=ACCEPTED_TYPES,
                         )
 
-                rank_btn = gr.Button("📊 Rank Resumes", elem_id="rank-btn", variant="secondary")
+                rank_btn = gr.Button(
+                    "Rank resumes", elem_classes=["secondary-action"], variant="secondary"
+                )
                 rank_out = gr.Markdown(label="Ranking Results")
 
                 rank_btn.click(
@@ -353,19 +374,21 @@ def build_demo() -> gr.Blocks:
                     outputs=rank_out,
                 )
 
-            # ── Tab: Batch Analyze ──────────────────────────────────────────────
+            # ── Tab: Batch analyze ──────────────────────────────────────────────
             with gr.Tab("Batch analyze"):
+                gr.Markdown("## Review a folder against one role", elem_classes=["section-heading"])
+                gr.Markdown(PRIVACY_NOTICE, elem_classes=["privacy-note"])
+
                 gr.Markdown(
-                    "Run the **full 4-step analysis** (profiles, gap analysis, bullets, interview "
-                    "prep) for every resume in a folder against one job description — a separate "
-                    "saved report per resume. Slower than Rank Resumes since every resume gets the "
-                    "complete pipeline, not just a quick score."
+                    "Run the full analysis for every resume in a folder. Each person gets a "
+                    "separate saved report; larger folders take longer. For scores only, use Rank resumes.",
+                    elem_classes=["section-intro"],
                 )
 
                 with gr.Row():
                     with gr.Column(scale=2):
                         batch_dir_input = gr.Textbox(
-                            label="Resume Folder Path",
+                            label="Folder containing resumes",
                             placeholder="e.g. C:\\Users\\you\\Resumes  or  ./samples/Resumes",
                         )
                     with gr.Column(scale=1):
@@ -374,7 +397,9 @@ def build_demo() -> gr.Blocks:
                             file_types=ACCEPTED_TYPES,
                         )
 
-                batch_btn = gr.Button("📦 Batch Analyze", variant="secondary")
+                batch_btn = gr.Button(
+                    "Analyze folder", elem_classes=["secondary-action"], variant="secondary"
+                )
                 batch_out = gr.Markdown(label="Batch Results")
 
                 batch_btn.click(
@@ -389,11 +414,17 @@ def build_demo() -> gr.Blocks:
                     outputs=batch_out,
                 )
 
-            # ── Tab: Compare Job Descriptions ──────────────────────────────────
+            # ── Tab: Compare job descriptions ──────────────────────────────────
             with gr.Tab("Compare jobs"):
                 gr.Markdown(
-                    "Score **one resume** against **several job descriptions** at once, to see "
-                    "which posting it fits best — the mirror image of Rank Resumes."
+                    "## See which role fits your experience", elem_classes=["section-heading"]
+                )
+                gr.Markdown(PRIVACY_NOTICE, elem_classes=["privacy-note"])
+
+                gr.Markdown(
+                    "Compare one resume with several job descriptions. Add the postings you’re "
+                    "considering to see their relative keyword match scores.",
+                    elem_classes=["section-intro"],
                 )
 
                 with gr.Row():
@@ -404,12 +435,14 @@ def build_demo() -> gr.Blocks:
                         )
                     with gr.Column(scale=2):
                         compare_jd_inputs = gr.File(
-                            label="Job Descriptions (select multiple)",
+                            label="Job descriptions (select multiple)",
                             file_types=ACCEPTED_TYPES,
                             file_count="multiple",
                         )
 
-                compare_btn = gr.Button("📑 Compare", variant="secondary")
+                compare_btn = gr.Button(
+                    "Compare roles", elem_classes=["secondary-action"], variant="secondary"
+                )
                 compare_out = gr.Markdown(label="Comparison Results")
 
                 compare_btn.click(
@@ -427,12 +460,17 @@ def build_demo() -> gr.Blocks:
             # ── Tab: More Tools ────────────────────────────────────────────────
             with gr.Tab("More tools"):
                 with gr.Tabs():
-                    with gr.Tab("🕘 History"):
+                    with gr.Tab("History"):
                         gr.Markdown(
-                            "Browse past analysis runs saved under `output/` and see your score trend."
+                            "Review reports from earlier runs and follow keyword scores over time.",
+                            elem_classes=["section-intro"],
                         )
 
-                        history_refresh_btn = gr.Button("🔄 Refresh", variant="secondary")
+                        history_refresh_btn = gr.Button(
+                            "Refresh history",
+                            elem_classes=["secondary-action"],
+                            variant="secondary",
+                        )
                         history_status = gr.Markdown()
                         history_trend_plot = gr.Plot(label="Score trend")
                         history_run_dd = gr.Dropdown(label="Past runs", choices=[])
@@ -471,12 +509,19 @@ def build_demo() -> gr.Blocks:
                             outputs=[history_run_dd, history_status, history_trend_plot],
                         )
 
-                    with gr.Tab("🖥️ Hardware"):
+                    with gr.Tab("Hardware"):
                         gr.Markdown(
-                            "Detects your GPU, memory, and recommends an Ollama compute profile."
+                            "## Check local model readiness", elem_classes=["section-heading"]
+                        )
+                        gr.Markdown(
+                            "See whether Ollama is reachable and review the hardware profile "
+                            "available for local analysis.",
+                            elem_classes=["section-intro"],
                         )
 
-                        hw_btn = gr.Button("🔍 Detect Hardware", variant="secondary")
+                        hw_btn = gr.Button(
+                            "Check hardware", elem_classes=["secondary-action"], variant="secondary"
+                        )
                         hw_out = gr.Markdown()
 
                         def _check_hw() -> str:

@@ -15,8 +15,8 @@ PIP ?= pip
 
 setup:
 	$(PY) -m venv venv
-	$(PIP) install --upgrade pip
-	$(PIP) install -e '.[dev]'
+	venv/bin/python -m pip install --upgrade pip
+	venv/bin/python -m pip install -e '.[dev]'
 
 test:
 	$(PY) -m pytest

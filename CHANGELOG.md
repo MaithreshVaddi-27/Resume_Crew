@@ -4,7 +4,7 @@ All notable changes to Resume_Crew are documented here.
 
 ## [1.4.0] — 2026-10-23
 ### Added
-- Gradio web UI with 6 tabs (Analyze, Build Resume, Rank Resumes, Batch Analyze, Compare JDs, History, Hardware).
+- Gradio web UI with seven workflows: Analyze, Build Resume, Rank Resumes, Batch Analyze, Compare JDs, History, and Hardware.
 - Cancel support for long-running analysis runs.
 - PDF (.pdf) and Word (.docx) report exports.
 - Hardware detection (CUDA / Apple MPS / CPU) with Ollama profile recommendation.
@@ -25,8 +25,4 @@ All notable changes to Resume_Crew are documented here.
 
 ## [Unreleased]
 ### Planned
-- CI pipeline (`.github/workflows/ci.yml`).
-- Pre-commit hooks (ruff, mypy, pytest).
-- Dockerfile / docker-compose.yml.
 - Expanded test coverage (pipeline, app, conftest fixtures).
-- `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, `CHANGELOG.md`.
