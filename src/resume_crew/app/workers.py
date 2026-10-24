@@ -405,13 +405,6 @@ def batch_analyze_fn(
             yield "No supported resume files found in that directory."
             return
 
-        from resume_crew.pipeline import (  # noqa: PLC0415
-            build_llm,
-            build_report_files,
-            first_meaningful_line,
-            run_llm_analysis,
-        )
-
         llm, resolved_provider = build_llm(provider, model, gemini_model)
         job_title = first_meaningful_line(job_text, "Target Role")
 

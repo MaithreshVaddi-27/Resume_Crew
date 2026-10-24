@@ -24,5 +24,27 @@ All notable changes to Resume_Crew are documented here.
 - Broad `except Exception` catch-alls narrowed where practical.
 
 ## [Unreleased]
-### Planned
-- Expanded test coverage (pipeline, app, conftest fixtures).
+### Added
+- Local model selector UI: per-session Ollama model dropdown with Refresh button.
+- Gemini model selector exposed as a separate dropdown; toggles with provider choice.
+- Resume ranking tab: score all resumes in a folder against one JD.
+- Batch analyze tab: full per-resume reports for every file in a folder.
+- Compare jobs tab: score one resume against multiple JD files simultaneously.
+- Cancel button for long-running analysis with graceful `AnalysisCancelled` signal.
+- PDF and Word (.docx) download buttons on the Full Report tab.
+- History tab with score trend chart and per-run section viewer.
+- Hardware check tab: Ollama reachability, CUDA/MPS/CPU profile, and model recommendation.
+- ngrok live-share support with mandatory auth guard; Gradio built-in share as fallback.
+- Report input size limits and atomic write to prevent partial/corrupted history entries.
+
+### Changed
+- Primary action button inverted to light-on-dark for stronger affordance.
+- CSS palette shifted to slightly warmer neutrals; font extracted to `--font-ui` variable.
+- Footer uses semantic `<footer>` element styled via CSS rule rather than inline override.
+- Settings accordion replaces per-tab model selectors; provider/model choice is global.
+- Auth required when public sharing is enabled (ngrok or Gradio share).
+
+### Fixed
+- Report history loading with missing or malformed JSON gracefully skipped.
+- Resume input character limit (`MAX_EXTRACTED_CHARACTERS`) enforced before LLM call.
+- Stale `output/` path resolution made relative to project root via `config.OUTPUT_ROOT`.
