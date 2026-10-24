@@ -17,7 +17,7 @@ All agent instructions in Resume_Crew live as versioned Markdown templates in `s
 - **Negative constraints**: explicit "never invent X" statements bound fabrication risk, especially in generation tasks (writer, resume builder).
 - **Few-shot grounding**: correct vs. incorrect output forms are shown so the model learns the exact bullet syntax.
 - **Input isolation**: analysts receive only profiles (never raw resumes) to prevent cross-document leakage.
-- **Fail-fast parsing**: `_parse_match_score` detects missing `SCORE:` and defaults to `0.0` with a warning; `_renumber_loose_questions` recovers bare question lines into a numbered list.
+- **Fail-fast parsing**: `_parse_match_score` rejects missing or malformed `SCORE:` values; `_renumber_loose_questions` recovers bare question lines into a numbered list.
 
 ## Prompt files
 

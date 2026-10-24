@@ -11,7 +11,6 @@
 .PHONY: setup test lint fmt typecheck ui cli clean
 
 PY ?= python3
-PIP ?= pip
 
 setup:
 	$(PY) -m venv venv

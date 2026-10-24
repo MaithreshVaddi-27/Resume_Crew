@@ -124,11 +124,6 @@ class Settings:
             return self.gradio_auth_user, self.gradio_auth_pass
         return None
 
-    @property
-    def public_url_configured(self) -> bool:
-        """True if ngrok or Gradio share is requested."""
-        return bool(self.ngrok_authtoken) or self.gradio_share
-
 
 def load_settings() -> Settings:
     """Public entry point: load and return validated settings."""

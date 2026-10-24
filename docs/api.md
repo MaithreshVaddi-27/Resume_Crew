@@ -10,7 +10,7 @@ Resume_Crew is a Python package. Public surface below.
 `load_settings() -> Settings`
 : Public entry point returning a `Settings` instance.
 
-`Settings.OUTPUT_ROOT` (`Path`)
+`resume_crew.config.OUTPUT_ROOT` (`Path`)
 : Project-root-resolved output directory (`<repo>/output`).
 
 ## `resume_crew.document_reader`

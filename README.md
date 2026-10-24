@@ -284,7 +284,7 @@ python app.py
 
 The UI opens automatically at `http://localhost:7860` and includes:
 
-- **Analyze Resume** — upload resume + JD, pick provider, watch step-by-step progress, view results across 8 sub-tabs (Score, Resume Profile, Job Profile, Gap Analysis, Tailored Bullets, Interview Prep, Resume Evidence, Full Report). Includes a **Cancel** button to stop a run between pipeline steps. The Full Report tab offers **PDF (default)** and **Word (.docx)** downloads.
+- **Analyze** — upload a resume and job description, choose a provider, and review the match report. Results include Score, Resume Profile, Job Profile, Gap Analysis, Tailored Bullets, Interview Prep, Resume Evidence, and Full Report. Cancel stops analysis between pipeline stages; the Full Report tab offers PDF and Word downloads.
 - **Build Resume** — draft a resume tailored to a target job description, using *only* facts from an uploaded resume and/or freeform notes you provide. Nothing is invented: no employer, date, skill, or number appears unless it's in your source material.
 - **Rank Resumes** — score a local folder of resumes against a JD, one lightweight LLM call per resume.
 - **Batch Analyze** — run the *full* 4-step analysis for every resume in a folder against one JD, saving a separate report per resume.

@@ -22,11 +22,11 @@ Resume_Crew — grounded, local-first resume-to-job-description analysis.
 ```
 src/resume_crew/          cli.py, config.py, document_reader.py, hardware.py,
                           pipeline.py, scoring.py, storage.py,
-                          app/            main.py, workers.py, styles.css, tabs/
+                          app/            main.py, workers.py, styles.css
                           prompts/        resume_profile.md, job_profile.md,
                                           gap_analysis.md, writer.md, scorer.md,
                                           resume_builder.md
-tests/                    test_*.py + conftest.py
+tests/                    test_*.py
 docs/                     architecture.md, api.md, deployment.md, prompting/
 samples/                  Resumes/, Job_description/
 ```

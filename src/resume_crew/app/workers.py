@@ -17,22 +17,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Make the package importable when running app.py directly from the project root.
-sys_path_inserted = False
-
-
-def _ensure_src_on_path() -> None:
-    global sys_path_inserted
-    if sys_path_inserted:
-        return
-    import sys
-
-    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
-    sys_path_inserted = True
-
-
-_ensure_src_on_path()
-
 import gradio as gr  # noqa: E402
 
 from resume_crew.config import load_settings  # noqa: E402

@@ -7,17 +7,12 @@ Layout and event wiring only. All long-running analysis logic lives in
 from __future__ import annotations
 
 import os
-import sys
 from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
 
 load_dotenv()
-
-# Make the package importable when running this module directly from the
-# project root (``python src/resume_crew/app/main.py``).
-sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "src"))
 
 # Disable CrewAI telemetry before any import of crewai touches the env.
 os.environ["CREWAI_TRACING_ENABLED"] = "false"
