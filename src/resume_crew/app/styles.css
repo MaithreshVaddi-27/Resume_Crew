@@ -287,8 +287,11 @@ body > footer, .gradio-container footer { color: var(--muted) !important; }
 
 /* ── Resume Highlights <mark> tags — force readable in dark mode ─────────── */
 .gradio-container mark {
-    background: #16653480 !important;
-    color: #d1fae5 !important;
+    background: #10b98155 !important;
+    color: inherit !important;
+    border-radius: 4px !important;
+    padding: 0 4px !important;
+    margin: 0 1px !important;
 }
 
 /* ── File upload zone ─────────────────────────────────────────────────────── */

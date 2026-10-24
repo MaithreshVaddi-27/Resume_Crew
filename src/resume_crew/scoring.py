@@ -77,7 +77,10 @@ def highlight_resume_matches(resume_text: str, match: KeywordMatch) -> str:
 
     matched_lookup = {term.lower() for term in match.matched}
     if not matched_lookup:
-        return f"<pre style='white-space:pre-wrap'>{_html.escape(resume_text)}</pre>"
+        return (
+            "<div style='white-space:pre-wrap;font-family:inherit;line-height:1.6;"
+            "overflow-wrap:break-word'>" + _html.escape(resume_text) + "</div>"
+        )
 
     def _wrap(m: re.Match[str]) -> str:
         token = m.group(0)
@@ -85,8 +88,8 @@ def highlight_resume_matches(resume_text: str, match: KeywordMatch) -> str:
         escaped_token = _html.escape(token)
         if normalized in matched_lookup:
             return (
-                "<mark style='background:#10b98155;color:inherit;border-radius:3px;"
-                f"padding:0 2px'>{escaped_token}</mark>"
+                "<mark style='background:#10b98155;color:inherit;border-radius:4px;"
+                f"padding:0 4px;margin:0 1px'>{escaped_token}</mark>"
             )
         return escaped_token
 
@@ -103,7 +106,10 @@ def highlight_resume_matches(resume_text: str, match: KeywordMatch) -> str:
     if pos < len(resume_text):
         pieces.append(_html.escape(resume_text[pos:]))
 
-    return f"<pre style='white-space:pre-wrap;font-family:inherit'>{''.join(pieces)}</pre>"
+    return (
+        "<div style='white-space:pre-wrap;font-family:inherit;line-height:1.6;"
+        "overflow-wrap:break-word'>" + "".join(pieces) + "</div>"
+    )
 
 
 def format_keyword_score(match: KeywordMatch) -> str:
