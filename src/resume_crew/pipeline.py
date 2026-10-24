@@ -333,12 +333,12 @@ def run_resume_builder(
 
 
 def _parse_match_score(output: str) -> tuple[float, str]:
-    score_match = re.search(r"SCORE:\s*(\d{1,3})", output, re.I)
+    score_match = re.search(r"SCORE:\s*(\d{1,3})\s*$", output, re.I | re.M)
+    if not score_match or int(score_match.group(1)) > 100:
+        raise ValueError("The model returned an invalid score; expected an integer from 0 to 100.")
     note_match = re.search(r"NOTE:\s*(.+)", output, re.I | re.S)
-    score = float(score_match.group(1)) if score_match else 0.0
-    score = max(0.0, min(100.0, score))
     note = note_match.group(1).strip().splitlines()[0] if note_match else output.strip()[:200]
-    return score, note
+    return float(score_match.group(1)), note
 
 
 # ---------------------------------------------------------------------------

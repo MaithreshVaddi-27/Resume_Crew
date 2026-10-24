@@ -51,7 +51,18 @@ def _read_pdf(path: Path) -> str:
         reader = PdfReader(str(path))
         if reader.is_encrypted and reader.decrypt("") == 0:
             raise ValueError(f"'{path}' is password-protected. Remove the password and try again.")
-        return _validate_text("\n".join(page.extract_text() or "" for page in reader.pages), path)
+        parts: list[str] = []
+        length = 0
+        for page in reader.pages:
+            text = page.extract_text() or ""
+            parts.append(text)
+            length += len(text) + (1 if len(parts) > 1 else 0)
+            if length > MAX_EXTRACTED_CHARACTERS:
+                raise ValueError(
+                    f"'{path}' contains more than {MAX_EXTRACTED_CHARACTERS:,} characters after "
+                    "extraction, exceeding the analysis limit. Split or shorten it."
+                )
+        return _validate_text("\n".join(parts), path)
     except ValueError:
         raise
     except PdfReadError as exc:

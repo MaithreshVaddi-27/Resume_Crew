@@ -1,7 +1,25 @@
 import os
 from pathlib import Path
 
+import pytest
+
 from resume_crew.cli import _disable_external_tracing, build_parser
+from resume_crew.config import Settings
+
+
+@pytest.mark.parametrize(
+    "setting, value",
+    [
+        ("OLLAMA_TIMEOUT", "0"),
+        ("OLLAMA_TIMEOUT", "nan"),
+        ("GRADIO_PORT", "0"),
+        ("GRADIO_PORT", "65536"),
+    ],
+)
+def test_settings_reject_invalid_numeric_ranges(monkeypatch, setting: str, value: str) -> None:
+    monkeypatch.setenv(setting, value)
+    with pytest.raises(ValueError):
+        Settings.from_env()
 
 
 def test_cli_has_no_word_export_flag() -> None:

@@ -7,6 +7,7 @@ a single source of truth instead of calling os.getenv ad hoc.
 
 from __future__ import annotations
 
+import math
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -67,13 +68,17 @@ class Settings:
 
         try:
             ollama_timeout = float(_get("OLLAMA_TIMEOUT", "3.0"))
-        except ValueError:
-            ollama_timeout = 3.0
+        except ValueError as exc:
+            raise ValueError("OLLAMA_TIMEOUT must be a positive number of seconds.") from exc
+        if not math.isfinite(ollama_timeout) or ollama_timeout <= 0:
+            raise ValueError("OLLAMA_TIMEOUT must be a positive finite number of seconds.")
 
         try:
             gradio_port = int(_get("GRADIO_PORT", "7860"))
-        except ValueError:
-            gradio_port = 7860
+        except ValueError as exc:
+            raise ValueError("GRADIO_PORT must be an integer from 1 to 65535.") from exc
+        if not 1 <= gradio_port <= 65535:
+            raise ValueError("GRADIO_PORT must be an integer from 1 to 65535.")
 
         ollama_profile = _get("OLLAMA_PROFILE", "auto").strip().lower()
         if ollama_profile not in VALID_OLLAMA_PROFILES:

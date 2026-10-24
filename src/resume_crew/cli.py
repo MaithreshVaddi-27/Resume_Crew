@@ -21,7 +21,7 @@ from .pipeline import (
     score_resume_path,
 )
 from .scoring import keyword_match_score
-from .storage import create_run_directory
+from .storage import write_run_files
 
 
 def _disable_external_tracing() -> None:
@@ -88,13 +88,12 @@ def _run_analysis(args: argparse.Namespace) -> None:
         gaps,
         writer_output,
     )
-    directory, _timestamp = create_run_directory(
+    directory, _timestamp = write_run_files(
         candidate,
         job_title,
+        files,
         output_dir=args.output,
     )
-    for name, content in files.items():
-        (directory / name).write_text(content, encoding="utf-8")
 
     print(f"Analysis complete. Report saved to: {directory}")
 

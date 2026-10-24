@@ -36,9 +36,12 @@ def list_ollama_models(base_url: str, timeout: float = 3.0) -> list[str]:
             payload = json.load(response)
     except (urllib.error.URLError, OSError, TimeoutError, json.JSONDecodeError):
         return []
+    models = payload.get("models", []) if isinstance(payload, dict) else []
+    if not isinstance(models, list):
+        return []
     return sorted(
         model["name"]
-        for model in payload.get("models", [])
+        for model in models
         if isinstance(model, dict) and isinstance(model.get("name"), str)
     )
 

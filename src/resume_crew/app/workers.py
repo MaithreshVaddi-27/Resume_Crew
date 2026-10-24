@@ -59,10 +59,9 @@ from resume_crew.scoring import (  # noqa: E402
     keyword_match_score,
 )
 from resume_crew.storage import (  # noqa: E402
-    create_run_directory,
     list_report_runs,
     read_run_report,
-    write_run_meta,
+    write_run_files,
 )
 
 # ---------------------------------------------------------------------------
@@ -173,10 +172,7 @@ def _run_analysis_thread(
             gap_analysis,
             writer_output,
         )
-        directory, timestamp = create_run_directory(candidate, job_title)
-        for name, content in files.items():
-            (directory / name).write_text(content, encoding="utf-8")
-        write_run_meta(directory, candidate, job_title, score.score, timestamp)
+        directory, _timestamp = write_run_files(candidate, job_title, files, score=score.score)
 
         step_q.put(f"✅ Done! Report saved to: {directory}")
         result_q.put(
@@ -459,10 +455,9 @@ def batch_analyze_fn(
                     gap_analysis,
                     writer_output,
                 )
-                directory, timestamp = create_run_directory(candidate, job_title)
-                for name, content in files.items():
-                    (directory / name).write_text(content, encoding="utf-8")
-                write_run_meta(directory, candidate, job_title, score.score, timestamp)
+                directory, _timestamp = write_run_files(
+                    candidate, job_title, files, score=score.score
+                )
 
                 results.append((path.name, score.score, str(directory)))
             except Exception as exc:  # noqa: BLE001
@@ -603,10 +598,11 @@ def build_resume_fn(
         candidate = first_meaningful_line(source_text, "Candidate")
         job_title = first_meaningful_line(job_text, "Target Role")
 
-        directory, timestamp = create_run_directory(candidate, job_title)
-        (directory / "generated_resume.md").write_text(resume_md, encoding="utf-8")
-        write_run_meta(
-            directory, candidate, f"{job_title} (drafted resume)", score.score, timestamp
+        directory, _timestamp = write_run_files(
+            candidate,
+            f"{job_title} (drafted resume)",
+            {"generated_resume.md": resume_md},
+            score=score.score,
         )
 
         pdf_path = None

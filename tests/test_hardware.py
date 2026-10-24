@@ -18,6 +18,21 @@ def test_list_ollama_models_reads_model_names(monkeypatch) -> None:
     assert list_ollama_models("http://localhost:11434") == ["gemma3:1b", "qwen3:1.7b"]
 
 
+def test_list_ollama_models_handles_unexpected_payload(monkeypatch) -> None:
+    class Response:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return None
+
+        def read(self) -> bytes:
+            return b'{"models": null}'
+
+    monkeypatch.setattr("urllib.request.urlopen", lambda *_args, **_kwargs: Response())
+    assert list_ollama_models("http://localhost:11434") == []
+
+
 def test_invalid_profile_is_rejected() -> None:
     with pytest.raises(ValueError, match="auto, cuda, mps, or cpu"):
         resolve_ollama_profile("invalid")

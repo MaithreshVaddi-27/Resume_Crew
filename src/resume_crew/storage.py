@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+import shutil
 import unicodedata
 from datetime import datetime
 from pathlib import Path
@@ -36,13 +37,37 @@ def create_run_directory(
 
     slug = f"{slugify(candidate_name)}__{slugify(job_title)}__{timestamp}"
     root = Path(output_dir) if output_dir is not None else OUTPUT_ROOT
-    directory = root / slug
-    suffix = 1
-    while directory.exists():
-        suffix += 1
-        directory = root / f"{slug}-{suffix}"
+    suffix = 0
+    while True:
+        directory = root / (slug if suffix == 0 else f"{slug}-{suffix}")
+        try:
+            directory.mkdir(parents=True, exist_ok=False)
+            return directory, timestamp
+        except FileExistsError:
+            suffix += 1
 
-    directory.mkdir(parents=True, exist_ok=False)
+
+def write_run_files(
+    candidate: str,
+    job_title: str,
+    files: dict[str, str],
+    output_dir: Path | str | None = None,
+    score: float | None = None,
+) -> tuple[Path, str]:
+    """Write a complete run before making it visible to History or users."""
+    directory, timestamp = create_run_directory(candidate, job_title, output_dir)
+    staging = directory.with_name(f".{directory.name}.tmp")
+    try:
+        staging.mkdir()
+        for name, content in files.items():
+            (staging / name).write_text(content, encoding="utf-8")
+        if score is not None:
+            write_run_meta(staging, candidate, job_title, score, timestamp)
+        staging.rename(directory)
+    except BaseException:
+        shutil.rmtree(staging, ignore_errors=True)
+        directory.rmdir()
+        raise
     return directory, timestamp
 
 

@@ -1,7 +1,19 @@
 import os
 from pathlib import Path
 
-from resume_crew.storage import create_run_directory, slugify
+import pytest
+
+from resume_crew.storage import create_run_directory, slugify, write_run_files
+
+
+def test_write_run_files_removes_incomplete_run_on_failure(tmp_path: Path, monkeypatch) -> None:
+    def fail_write(*_args, **_kwargs) -> int:
+        raise OSError("disk full")
+
+    monkeypatch.setattr(Path, "write_text", fail_write)
+    with pytest.raises(OSError, match="disk full"):
+        write_run_files("Jane Doe", "Engineer", {"report.md": "report"}, output_dir=tmp_path)
+    assert list(tmp_path.iterdir()) == []
 
 
 def test_slugify_is_filesystem_safe() -> None:
