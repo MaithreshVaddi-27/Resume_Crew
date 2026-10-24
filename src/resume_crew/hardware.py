@@ -11,6 +11,16 @@ import urllib.request
 from typing import Any
 
 
+def _fetch_ollama_tags(base_url: str, timeout: float = 3.0) -> Any:
+    """GET /api/tags from Ollama, returning the response or None on failure."""
+    try:
+        return urllib.request.urlopen(  # noqa: S310
+            f"{base_url.rstrip('/')}/api/tags", timeout=timeout
+        )
+    except (urllib.error.URLError, OSError, TimeoutError):
+        return None
+
+
 def ollama_is_running(base_url: str, timeout: float | None = None) -> bool:
     # Allow overriding timeout via env var — useful on slow machines or WSL2.
     if timeout is None:
@@ -18,23 +28,17 @@ def ollama_is_running(base_url: str, timeout: float | None = None) -> bool:
             timeout = float(os.getenv("OLLAMA_TIMEOUT", "3.0"))
         except ValueError:
             timeout = 3.0
-    try:
-        with urllib.request.urlopen(  # noqa: S310
-            f"{base_url.rstrip('/')}/api/tags", timeout=timeout
-        ):
-            return True
-    except (urllib.error.URLError, OSError, TimeoutError):
-        return False
+    return _fetch_ollama_tags(base_url, timeout) is not None
 
 
 def list_ollama_models(base_url: str, timeout: float = 3.0) -> list[str]:
     """Return names of locally installed Ollama models, or an empty list if unavailable."""
+    response = _fetch_ollama_tags(base_url, timeout)
+    if response is None:
+        return []
     try:
-        with urllib.request.urlopen(  # noqa: S310
-            f"{base_url.rstrip('/')}/api/tags", timeout=timeout
-        ) as response:
-            payload = json.load(response)
-    except (urllib.error.URLError, OSError, TimeoutError, json.JSONDecodeError):
+        payload = json.load(response)
+    except json.JSONDecodeError:
         return []
     models = payload.get("models", []) if isinstance(payload, dict) else []
     if not isinstance(models, list):

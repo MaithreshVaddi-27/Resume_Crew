@@ -106,6 +106,15 @@ def split_writer_output_safe(writer_output: str) -> tuple[str, str]:
 # ---------------------------------------------------------------------------
 
 
+def _list_resume_files(source: Path) -> list[Path]:
+    """Return supported resume files in a directory, sorted by name."""
+    return sorted(
+        p
+        for p in source.iterdir()
+        if p.is_file() and p.suffix.lower() in SUPPORTED_DOCUMENT_EXTENSIONS
+    )
+
+
 def _run_analysis_thread(
     resume_path: str,
     job_path: str,
@@ -343,11 +352,7 @@ def rank_resumes_fn(
             yield f"❌ `{source}` is not a directory."
             return
 
-        paths = sorted(
-            p
-            for p in source.iterdir()
-            if p.is_file() and p.suffix.lower() in SUPPORTED_DOCUMENT_EXTENSIONS
-        )
+        paths = _list_resume_files(source)
         if not paths:
             yield "No supported resume files found in that directory."
             return
@@ -396,11 +401,7 @@ def batch_analyze_fn(
             yield f"❌ `{source}` is not a directory."
             return
 
-        paths = sorted(
-            p
-            for p in source.iterdir()
-            if p.is_file() and p.suffix.lower() in SUPPORTED_DOCUMENT_EXTENSIONS
-        )
+        paths = _list_resume_files(source)
         if not paths:
             yield "No supported resume files found in that directory."
             return
