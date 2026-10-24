@@ -292,37 +292,28 @@ The UI opens automatically at `http://localhost:7860` and includes:
 - **History** — browse past saved runs, reload any report back into the tabs, and view a score-trend chart across runs.
 - **Hardware** — detect GPU, RAM, and Ollama status from the browser.
 
-### Live public URL via ngrok
+### Authenticated public sharing
 
-1. Get a free authtoken at [dashboard.ngrok.com](https://dashboard.ngrok.com/get-started/your-authtoken).
-2. Add it to `.env`:
+Public tunnels expose the app to anyone who can reach the URL. Resume files, notes, and generated reports may contain sensitive personal information. Resume_Crew therefore refuses to start ngrok or Gradio sharing unless both credentials are set.
+
+1. For ngrok, get an authtoken at [dashboard.ngrok.com](https://dashboard.ngrok.com/get-started/your-authtoken).
+2. Add the tunnel option and credentials to `.env`:
 
    ```env
    NGROK_AUTHTOKEN=your_token_here
+   GRADIO_AUTH_USER=choose_a_username
+   GRADIO_AUTH_PASS=replace_with_a_strong_password
    ```
 
-3. Run `python app.py`. A live public URL prints in the terminal at startup:
+3. Run `python app.py`. The URL prints in the terminal after tunnel setup. Keep it and the credentials private; use a unique, strong password.
 
-   ```text
-   ============================================================
-     🌐  Live ngrok URL: https://xxxx-xx-xx.ngrok-free.app
-   ============================================================
-   ```
-
-Share this URL with anyone — no port-forwarding or VPN required.
-
-**A public URL has no login by default** — anyone with the link can upload documents and run analysis. Set both of these in `.env` to require a username/password before the app loads:
-
-```env
-GRADIO_AUTH_USER=someuser
-GRADIO_AUTH_PASS=some-strong-password
-```
+To use Gradio's built-in tunnel instead, set `GRADIO_SHARE=true` and keep both auth values configured. To run locally only, leave `GRADIO_SHARE=false` and `NGROK_AUTHTOKEN` empty.
 
 ### Port and share settings
 
 ```env
 GRADIO_PORT=7860        # Change the local port
-GRADIO_SHARE=true        # Use Gradio's built-in tunnel instead of ngrok
+GRADIO_SHARE=false      # Public Gradio tunnel (requires both auth values)
 ```
 
 ## Project layout

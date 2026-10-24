@@ -37,8 +37,9 @@ Copy `.env.example` to `.env` and set at minimum:
 
 `.env` is gitignored — never commit it.
 
-## Production notes
+## Privacy and public access
 - CrewAI telemetry is disabled by default.
-- With `provider=ollama`, data stays on the local machine.
-- With `provider=gemini`, source text is sent to Google — use only when acceptable.
-- A public ngrok/Gradio share URL has no login by default; set `GRADIO_AUTH_USER`/`GRADIO_AUTH_PASS` to require basic auth.
+- With `provider=ollama`, prompts stay on the local machine, subject to your Ollama setup. With `provider=gemini`, extracted document text is sent to Google.
+- Reports are stored under `output/`; protect that directory because it can contain personal information.
+- Public ngrok and Gradio share tunnels require both `GRADIO_AUTH_USER` and `GRADIO_AUTH_PASS`. The app exits before opening a tunnel if either is missing. Use a unique strong password and keep the URL private.
+- This app uses one shared local report folder and is intended for personal/local use, not multi-user hosting. Basic authentication does not isolate users or their reports.

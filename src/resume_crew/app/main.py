@@ -570,17 +570,23 @@ def main() -> None:
     settings = load_settings()
     settings.apply_telemetry_env()
 
-    PORT = int(os.getenv("GRADIO_PORT", str(settings.gradio_port)))
+    if (settings.ngrok_authtoken or settings.gradio_share) and not settings.auth:
+        raise SystemExit(
+            "Public sharing requires GRADIO_AUTH_USER and GRADIO_AUTH_PASS. "
+            "Set both in .env or disable public sharing."
+        )
 
-    # Try ngrok first; fall back to Gradio's built-in sharing if no authtoken.
+    port = settings.gradio_port
+
+    # Prefer ngrok when configured; otherwise use Gradio's built-in tunnel.
     ngrok_url = None
-    token = os.getenv("NGROK_AUTHTOKEN", "").strip()
+    token = settings.ngrok_authtoken
     if token:
         try:
             from pyngrok import conf, ngrok  # noqa: PLC0415
 
             conf.get_default().auth_token = token
-            tunnel = ngrok.connect(PORT, "http")
+            tunnel = ngrok.connect(port, "http")
             ngrok_url = tunnel.public_url
             print(f"\n{'=' * 60}")
             print(f"  🌐  Live ngrok URL: {ngrok_url}")
@@ -590,28 +596,19 @@ def main() -> None:
         except Exception as exc:  # noqa: BLE001
             print(f"[app] ngrok setup failed: {exc}")
 
-    use_share = (ngrok_url is None) and os.getenv("GRADIO_SHARE", "false").lower() == "true"
-
-    auth_user = os.getenv("GRADIO_AUTH_USER", "").strip()
-    auth_pass = os.getenv("GRADIO_AUTH_PASS", "").strip()
-    auth = (auth_user, auth_pass) if auth_user and auth_pass else None
-    if (ngrok_url or use_share) and not auth:
-        print(
-            "   ⚠️  Sharing publicly with no login — set GRADIO_AUTH_USER/GRADIO_AUTH_PASS "
-            "in .env to require a password."
-        )
+    use_share = (ngrok_url is None) and settings.gradio_share
 
     demo = build_demo()
-    print(f"\n🎯 Resume_Crew UI starting at http://localhost:{PORT}")
-    if not ngrok_url:
-        print("   (Set NGROK_AUTHTOKEN in .env for a live public URL)")
+    print(f"\nResume_Crew is ready at http://localhost:{port}")
+    if ngrok_url is None and not use_share:
+        print("   Public sharing is off. Configure authenticated sharing in .env to enable it.")
 
     demo.launch(
-        server_port=PORT,
+        server_port=port,
         share=use_share,
         show_error=True,
         inbrowser=True,
-        auth=auth,
+        auth=settings.auth,
         **_LAUNCH_STYLE_KWARGS,
     )
 
