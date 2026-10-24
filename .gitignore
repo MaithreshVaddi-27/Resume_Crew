@@ -28,6 +28,7 @@ data/
 .DS_Store
 .idea/
 .vscode/
+.taste-skill/
 
 # Do not accidentally commit user documents outside the supplied samples.
 *.pdf
