@@ -93,6 +93,7 @@ def _run_analysis(args: argparse.Namespace) -> None:
         job_title,
         files,
         output_dir=args.output,
+        score=score.score,
     )
 
     print(f"Analysis complete. Report saved to: {directory}")

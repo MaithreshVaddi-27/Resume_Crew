@@ -655,7 +655,7 @@ def refresh_history_fn() -> tuple[Any, str, Any]:
         y = [r.get("score", 0) for r in chrono]
         labels = [str(r.get("candidate", "?"))[:12] for r in chrono]
 
-        bg, card, grid, text, accent = "#0b1220", "#131b2c", "#2a3450", "#e2e8f0", "#60a5fa"
+        bg, card, grid, text, accent = "#111318", "#191c22", "#3b404a", "#f0f1f3", "#83b5ed"
         fig, ax = plt.subplots(figsize=(7, 3))
         fig.patch.set_facecolor(bg)
         ax.set_facecolor(card)

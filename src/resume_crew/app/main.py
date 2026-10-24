@@ -556,7 +556,7 @@ def build_demo() -> gr.Blocks:
         </footer>
         """)
 
-    return demo
+    return demo  # type: ignore[no-any-return]
 
 
 # ---------------------------------------------------------------------------

@@ -67,3 +67,31 @@ def test_splits_with_spaced_heading_words() -> None:
     bullets, guide = split_writer_output(text)
     assert "B" in bullets
     assert "Q" in guide
+
+
+def test_markdown_to_docx_renders_content() -> None:
+    doc = pipeline.markdown_to_docx(
+        "# Heading 1\n## Heading 2\n- **Item 1:** detail\n1. Step one\n---\nPlain text",
+        "Test Title",
+    )
+    assert doc is not None
+    assert len(doc.paragraphs) > 0
+
+
+def test_markdown_to_pdf_renders_bytes() -> None:
+    pytest.importorskip("fpdf")
+    pdf_bytes = pipeline.markdown_to_pdf(
+        "# Heading 1\n## Heading 2\n- **Item 1:** detail\n1. Step one\n---\nPlain text",
+        "Test Title",
+    )
+    assert isinstance(pdf_bytes, bytes)
+    assert pdf_bytes.startswith(b"%PDF")
+
+
+def test_pdf_safe_text_converts_smart_quotes_and_emojis() -> None:
+    from resume_crew.pipeline import _pdf_safe_text
+
+    raw = "Here is “smart text” with — em-dash and ✅ emoji."
+    safe = _pdf_safe_text(raw)
+    assert '"smart text"' in safe
+    assert "[OK]" in safe

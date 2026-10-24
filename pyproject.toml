@@ -55,9 +55,10 @@ unfixable = []
 extend-immutable-calls = ["frozenset"]
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.12"
 warn_return_any = true
 warn_unused_ignores = true
 disallow_untyped_defs = true
 disallow_any_generics = true
 strict_equality = true
+ignore_missing_imports = true
