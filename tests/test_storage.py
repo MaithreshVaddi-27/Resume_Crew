@@ -3,7 +3,13 @@ from pathlib import Path
 import pytest
 
 from resume_crew import storage
-from resume_crew.storage import create_run_directory, slugify, write_run_files
+from resume_crew.storage import (
+    create_run_directory,
+    list_report_runs,
+    read_run_report,
+    slugify,
+    write_run_files,
+)
 
 
 def test_write_run_files_removes_incomplete_run_on_failure(tmp_path: Path, monkeypatch) -> None:
@@ -89,3 +95,29 @@ def test_repeat_run_gets_unique_directory(tmp_path: Path) -> None:
     second, _ = create_run_directory("Alice Smith", "Data Analyst", output_dir=tmp_path)
     assert first != second
     assert first.exists() and second.exists()
+
+
+def test_written_run_is_discoverable_by_history(tmp_path: Path, monkeypatch) -> None:
+    """Regression: a run written via write_run_files must appear in list_report_runs
+    and be readable via read_run_report (staging temp name must not leak into meta)."""
+    import json
+
+    output_root = tmp_path / "output"
+    output_root.mkdir()
+    monkeypatch.setattr(storage, "OUTPUT_ROOT", output_root)
+
+    directory, _timestamp = write_run_files(
+        "Jane Doe", "Engineer", {"match_report.md": "# Report"}, output_dir=output_root, score=78.5
+    )
+
+    meta = json.loads((directory / "run_meta.json").read_text(encoding="utf-8"))
+    assert meta["directory"] == directory.name, meta
+
+    runs = list_report_runs()
+    assert len(runs) == 1
+    assert runs[0]["path"] == str(directory)
+    assert runs[0]["candidate"] == "Jane Doe"
+    assert runs[0]["score"] == 78.5
+
+    files = read_run_report(str(directory))
+    assert "match_report.md" in files

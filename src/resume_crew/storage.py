@@ -63,7 +63,9 @@ def write_run_files(
         for name, content in files.items():
             (staging / name).write_text(content, encoding="utf-8")
         if score is not None:
-            write_run_meta(staging, candidate, job_title, score, timestamp)
+            write_run_meta(
+                staging, candidate, job_title, score, timestamp, published_name=directory.name
+            )
         staging.rename(directory)
     except BaseException:
         shutil.rmtree(staging, ignore_errors=True)
@@ -78,14 +80,22 @@ def write_run_meta(
     job_title: str,
     score: float,
     timestamp: str,
+    published_name: str | None = None,
 ) -> None:
-    """Write a small JSON sidecar so History/trend views don't need to re-parse Markdown."""
+    """Write a small JSON sidecar so History/trend views don't need to re-parse Markdown.
+
+    ``published_name`` records the final (published) run directory name. When
+    writes are staged under a temporary ``.name.tmp`` directory before being
+    renamed into place, recording the staging name would make
+    :func:`list_report_runs` reject the run because its directory-name guard
+    would never match.
+    """
     meta = {
         "candidate": candidate,
         "job_title": job_title,
         "score": score,
         "timestamp": timestamp,
-        "directory": directory.name,
+        "directory": published_name or directory.name,
     }
     (directory / META_FILENAME).write_text(json.dumps(meta, indent=2), encoding="utf-8")
 

@@ -60,8 +60,10 @@ Resume_Crew is a Python package. Public surface below.
 `create_run_directory(candidate_name, job_title, output_dir=None) -> tuple[Path, str]`
 : Create a uniquely-named run directory under `output/`.
 
-`write_run_meta(directory, candidate, job_title, score, timestamp) -> None`
-: Write `run_meta.json` sidecar.
+`write_run_meta(directory, candidate, job_title, score, timestamp, published_name=None) -> None`
+: Write `run_meta.json` sidecar. ``published_name`` records the final published run
+  directory name (used when writes are staged under a temporary directory before
+  being renamed into place).
 
 `list_report_runs(limit=50) -> list[dict]`
 : List past runs most-recent-first.
