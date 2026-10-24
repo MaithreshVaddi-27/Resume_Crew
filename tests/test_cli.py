@@ -58,3 +58,16 @@ def test_cli_has_output_flag(tmp_path: Path) -> None:
     # Passing --output should not error and build_parser must still construct.
     args = parser.parse_args(["--output", str(tmp_path)])
     assert args.output == str(tmp_path)
+
+
+def test_cli_check_hardware_flag() -> None:
+    parser = build_parser()
+    args = parser.parse_args(["--check-hardware"])
+    assert args.check_hardware is True
+
+
+def test_cli_rank_resumes_flag() -> None:
+    parser = build_parser()
+    args = parser.parse_args(["--rank-resumes", "./resumes", "--jd", "./job.pdf"])
+    assert args.rank_resumes == "./resumes"
+    assert args.job_description == "./job.pdf"

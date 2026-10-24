@@ -48,3 +48,15 @@ def test_rejects_unsupported_extension(tmp_path: Path) -> None:
     source.write_text("not supported")
     with pytest.raises(ValueError, match="Unsupported"):
         extract_text(str(source))
+
+
+def test_rejects_empty_file(tmp_path: Path) -> None:
+    source = tmp_path / "empty.txt"
+    source.write_text("   \n\t  ")
+    with pytest.raises(ValueError, match="No extractable text"):
+        extract_text(str(source))
+
+
+def test_rejects_non_existent_file(tmp_path: Path) -> None:
+    with pytest.raises(FileNotFoundError, match="File not found"):
+        extract_text(str(tmp_path / "does_not_exist.pdf"))

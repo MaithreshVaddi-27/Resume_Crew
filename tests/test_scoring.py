@@ -27,3 +27,24 @@ def test_keyword_match_fields_are_tuples() -> None:
     result = keyword_match_score("Python developer", "Python Java SQL")
     assert isinstance(result.matched, tuple)
     assert isinstance(result.missing, tuple)
+
+
+def test_highlight_resume_matches_escapes_html_and_wraps_marks() -> None:
+    from resume_crew.scoring import highlight_resume_matches
+
+    match = keyword_match_score("Expert in Python and <script>alert(1)</script>", "Python")
+    html = highlight_resume_matches("Expert in Python and <script>alert(1)</script>", match)
+    assert "<script>" not in html
+    assert "&lt;script&gt;" in html
+    assert "<mark" in html
+    assert "Python</mark>" in html
+
+
+def test_format_keyword_score_renders_summary() -> None:
+    from resume_crew.scoring import format_keyword_score
+
+    match = keyword_match_score("Python engineer", "Python SQL Docker")
+    summary = format_keyword_score(match)
+    assert "**Score:**" in summary
+    assert "`python`" in summary
+    assert "`sql`" in summary
