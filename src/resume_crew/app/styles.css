@@ -1,21 +1,22 @@
-/* Resume evidence workspace: ink, paper, and restrained signal blue. */
+/* Resume Crew: an evidence desk, with paper-like layers and one signal blue. */
 :root {
     color-scheme: dark;
-    --bg-page: #10151d;
-    --bg-card: #171f29;
-    --bg-raised: #202b37;
-    --border: #354352;
-    --accent: #78a9e6;
-    --accent-2: #a7c8f2;
-    --text: #e7ebef;
-    --muted: #b1bdc8;
+    --bg-page: #111318;
+    --bg-card: #191c22;
+    --bg-raised: #242830;
+    --border: #3b404a;
+    --accent: #83b5ed;
+    --accent-2: #b6d3f4;
+    --text: #f0f1f3;
+    --muted: #c0c5ce;
     --radius: 5px;
+    --font-ui: 'Trebuchet MS', 'Segoe UI', system-ui, sans-serif;
 }
 
 body, .gradio-container {
     background: var(--bg-page) !important;
     color: var(--text) !important;
-    font-family: 'Avenir Next', 'Segoe UI', sans-serif !important;
+    font-family: var(--font-ui) !important;
     font-size: 1rem !important;
 }
 
@@ -25,8 +26,8 @@ body, .gradio-container {
     align-items: center;
     gap: 16px;
     position: relative;
-    padding: 28px 0 26px;
-    margin-bottom: 16px;
+    padding: 22px 0 20px;
+    margin-bottom: 12px;
     border-bottom: 1px solid var(--border);
 }
 #app-header h1 {
@@ -45,9 +46,9 @@ body, .gradio-container {
 .privacy-note {
     margin: 0 0 18px !important;
     padding: 11px 14px !important;
-    border-left: 3px solid var(--accent) !important;
-    background: #192633 !important;
-    color: #d4e0ec !important;
+    border-left: 2px solid var(--accent) !important;
+    background: #1c222b !important;
+    color: var(--text) !important;
     border-radius: 0 var(--radius) var(--radius) 0 !important;
     font-size: 0.92rem !important;
 }
@@ -58,7 +59,7 @@ body, .gradio-container {
     width: 42px;
     height: 42px;
     border: 1px solid var(--accent);
-    border-radius: 50%;
+    border-radius: 5px;
     color: var(--accent-2);
     font-size: 0.83rem;
     font-weight: 700;
@@ -161,9 +162,9 @@ body, .gradio-container {
 /* ── Buttons ─────────────────────────────────────────────────────────────── */
 .primary-action button {
     min-height: 48px;
-    background: #315f96 !important;
-    border: 1px solid #6f9fd6 !important;
-    color: #ffffff !important;
+    background: #e8edf3 !important;
+    border: 1px solid #e8edf3 !important;
+    color: #15181e !important;
     font-weight: 650 !important;
     font-size: 1rem !important;
     border-radius: var(--radius) !important;
@@ -171,11 +172,11 @@ body, .gradio-container {
     transition: background-color 0.15s ease-out, border-color 0.15s ease-out !important;
     cursor: pointer !important;
 }
-.primary-action button:hover { background: #3a70ad !important; }
+.primary-action button:hover { background: #ffffff !important; border-color: #ffffff !important; }
 .secondary-action button {
     background: transparent !important;
-    border: 1px solid var(--accent) !important;
-    color: var(--accent-2) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text) !important;
     font-weight: 600 !important;
     border-radius: 6px !important;
     padding: 11px 22px !important;
@@ -185,10 +186,10 @@ body, .gradio-container {
 
 /* ── Progress box ─────────────────────────────────────────────────────────── */
 #progress-box textarea {
-    background: #060a13 !important;
+    background: #15181e !important;
     border: 1px solid var(--border) !important;
-    color: #cbd5e1 !important;
-    font-family: 'Avenir Next', 'Segoe UI', sans-serif !important;
+    color: var(--text) !important;
+    font-family: var(--font-ui) !important;
     font-size: 0.92rem !important;
     line-height: 1.55 !important;
     border-radius: 6px !important;
@@ -224,7 +225,7 @@ body, .gradio-container {
 .gradio-container .tab-nav button.selected {
     background: transparent !important;
     color: var(--text) !important;
-    border-bottom: 2px solid var(--accent) !important;
+    border-bottom: 1px solid var(--accent) !important;
 }
 .gradio-container :is(button, input, textarea, select, [role="tab"]):focus-visible {
     outline: 3px solid var(--accent-2) !important;
@@ -232,6 +233,9 @@ body, .gradio-container {
 }
 .gradio-container button { min-height: 44px; }
 ::selection { background: #315f96; color: #fff; }
+.gradio-container :is(input, textarea, select)::placeholder { color: #aeb5c0 !important; opacity: 1 !important; }
+#app-footer { color: var(--muted) !important; font-size: 0.875rem; line-height: 1.5; }
+body > footer, .gradio-container footer { color: var(--muted) !important; }
 @media (max-width: 640px) {
     #app-header { align-items: flex-start; gap: 12px; padding: 20px 0; }
     .document-row { padding: 10px !important; gap: 10px !important; }

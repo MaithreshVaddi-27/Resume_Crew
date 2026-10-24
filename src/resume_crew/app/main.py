@@ -550,10 +550,10 @@ def build_demo() -> gr.Blocks:
 
         # ── Footer ─────────────────────────────────────────────────────────────
         gr.HTML("""
-        <div style="text-align:center;padding:20px 0 8px;color:#475569;font-size:0.8rem;">
+        <footer id="app-footer" style="text-align:center;padding:20px 0 8px;">
             Resume_Crew v1.4.0 — grounded, local-first AI analysis.
             Keyword scores are not ATS simulations or hiring recommendations.
-        </div>
+        </footer>
         """)
 
     return demo
