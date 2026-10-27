@@ -7,6 +7,7 @@ Layout and event wiring only. All long-running analysis logic lives in
 from __future__ import annotations
 
 import os
+import signal
 import threading
 from pathlib import Path
 from typing import Any
@@ -38,15 +39,29 @@ _PROVIDER_LABELS = {
     "ollama": "Ollama (local)",
     "gemini": "Gemini (cloud)",
 }
-MLX_MODELS, DEFAULT_MLX_MODEL = workers.mlx_model_choices()
+# MLX-LM model choices are resolved lazily on first use so import stays fast.
+_MLX_MODELS_CACHE: list[str] | None = None
+_DEFAULT_MLX_MODEL_CACHE: str | None = None
+
+
+def _mlx_models() -> tuple[list[str], str | None]:
+    global _MLX_MODELS_CACHE, _DEFAULT_MLX_MODEL_CACHE
+    if _MLX_MODELS_CACHE is None:
+        _MLX_MODELS_CACHE, _DEFAULT_MLX_MODEL_CACHE = workers.mlx_model_choices()
+    return _MLX_MODELS_CACHE, _DEFAULT_MLX_MODEL_CACHE
+
+
+MLX_MODELS: list[str] = []
+DEFAULT_MLX_MODEL: str | None = None
 GEMINI_MODELS = [
+    ("Gemini 4 Argon · flagship reasoning", "gemini/gemini-4-argon"),
     ("Gemini 3.8 Flash · recommended", "gemini/gemini-3.8-flash"),
-    ("Gemini 3.6 Flash", "gemini/gemini-3.6-flash"),
-    ("Gemini 3.5 Flash-Lite · fast and low cost", "gemini/gemini-3.5-flash-lite"),
-    ("Gemini 3.1 Flash-Lite", "gemini/gemini-3.1-flash-lite"),
-    ("Gemini 2.5 Pro · legacy", "gemini/gemini-2.5-pro"),
-    ("Gemini 2.5 Flash · legacy", "gemini/gemini-2.5-flash"),
-    ("Gemini 2.5 Flash-Lite · legacy", "gemini/gemini-2.5-flash-lite"),
+    ("Gemini 3.6 Flash · token-efficient", "gemini/gemini-3.6-flash"),
+    ("Gemini 3.5 Flash · coding & agents", "gemini/gemini-3.5-flash"),
+    ("Gemini 3.5 Flash-Lite · fast & low cost", "gemini/gemini-3.5-flash-lite"),
+    ("Gemini 3.1 Flash-Lite · frontier-class", "gemini/gemini-3.1-flash-lite"),
+    ("Gemini 2.5 Pro · legacy (retiring 2026-10-20)", "gemini/gemini-2.5-pro"),
+    ("Gemini 2.5 Flash · legacy (retiring 2026-10-20)", "gemini/gemini-2.5-flash"),
 ]
 ACCEPTED_TYPES = list(SUPPORTED_DOCUMENT_EXTENSIONS)
 LOCAL_MODELS, DEFAULT_LOCAL_MODEL = workers.local_model_choices()
@@ -97,8 +112,8 @@ def build_demo() -> gr.Blocks:
                     elem_id="provider-select",
                 )
                 mlx_model_dd = gr.Dropdown(
-                    choices=MLX_MODELS,
-                    value=DEFAULT_MLX_MODEL,
+                    choices=_mlx_models()[0],
+                    value=_mlx_models()[1] or _SETTINGS.mlx_model,
                     label="MLX model",
                     info="Choose an MLX-LM model already downloaded on this machine.",
                     allow_custom_value=False,
@@ -633,6 +648,14 @@ def main() -> None:
         )
 
     port = settings.gradio_port
+
+    # Handle graceful shutdown on SIGTERM/SIGINT.
+    def _shutdown(signum: int, frame: Any) -> None:
+        print("\nShutting down Resume Crew...")
+        raise SystemExit(0)
+
+    signal.signal(signal.SIGTERM, _shutdown)
+    signal.signal(signal.SIGINT, _shutdown)
 
     # Start Gradio before creating an external tunnel so the public endpoint
     # never points at a port that is still starting.

@@ -158,3 +158,36 @@ def print_profile(profile: dict[str, Any]) -> None:
     print(f"  System memory: {hardware['system_memory_gb'] or 'unknown'} GB")
     print(f"\nRecommended Ollama profile: {profile['name'].upper()}")
     print(f"  Context window: {profile['context']}")
+
+
+def mlx_is_running(base_url: str, timeout: float = 3.0) -> bool:
+    """Check whether an MLX-LM OpenAI-compatible server is reachable."""
+    url = base_url.rstrip("/")
+    if not url.endswith("/v1"):
+        url = url + "/v1"
+    try:
+        response = urllib.request.urlopen(f"{url}/models", timeout=timeout)  # noqa: S310
+        code = response.getcode()
+        return isinstance(code, int) and code == 200
+    except (urllib.error.URLError, OSError, TimeoutError):
+        return False
+
+
+def list_mlx_models(base_url: str, timeout: float = 3.0) -> list[str]:
+    """Return model IDs served by an MLX-LM server, or empty list on failure."""
+    url = base_url.rstrip("/")
+    if not url.endswith("/v1"):
+        url = url + "/v1"
+    try:
+        response = urllib.request.urlopen(f"{url}/models", timeout=timeout)  # noqa: S310
+        payload = json.load(response)
+    except (urllib.error.URLError, OSError, TimeoutError, json.JSONDecodeError):
+        return []
+    data = payload.get("data", []) if isinstance(payload, dict) else []
+    if not isinstance(data, list):
+        return []
+    return sorted(
+        model["id"]
+        for model in data
+        if isinstance(model, dict) and isinstance(model.get("id"), str)
+    )

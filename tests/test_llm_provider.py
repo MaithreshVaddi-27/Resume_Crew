@@ -1,5 +1,7 @@
 """Tests for LLM provider selection in pipeline.build_llm."""
 
+from unittest.mock import patch
+
 import pytest
 
 from resume_crew.pipeline import build_llm
@@ -12,7 +14,8 @@ def test_build_mlx_constructs_openai_compatible_client(monkeypatch):
     monkeypatch.setenv("MLX_MODEL", "mlx-community/Qwen3-4B-Instruct-2507-4bit")
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
 
-    llm, provider = build_llm(provider="mlx")
+    with patch("resume_crew.pipeline.mlx_is_running", return_value=True):
+        llm, provider = build_llm(provider="mlx")
 
     assert provider == "mlx"
     assert llm.base_url == "http://localhost:8080/v1"
@@ -60,6 +63,7 @@ def test_build_llm_defaults_to_settings_provider(monkeypatch):
     monkeypatch.setenv("MLX_MODEL", "mlx-community/Qwen3-4B-Instruct-2507-4bit")
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
 
-    llm, provider = build_llm()
+    with patch("resume_crew.pipeline.mlx_is_running", return_value=True):
+        llm, provider = build_llm()
 
     assert provider == "mlx"

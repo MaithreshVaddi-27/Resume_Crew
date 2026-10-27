@@ -15,9 +15,9 @@ from typing import Any
 
 from .config import load_settings
 from .document_reader import extract_text
-from .hardware import ollama_is_running
+from .hardware import mlx_is_running, ollama_is_running
 from .prompts import load_prompt
-from .scoring import KeywordMatch, format_keyword_score
+from .scoring import KeywordMatch, format_keyword_score, tokenize
 
 
 class AnalysisCancelled(Exception):
@@ -80,6 +80,11 @@ def build_llm(
         return LLM(model=f"ollama/{ollama_model}", base_url=base_url), "ollama"
 
     if provider == "mlx":
+        if not mlx_is_running(settings.mlx_base_url):
+            raise RuntimeError(
+                f"MLX-LM server is not reachable at {settings.mlx_base_url}. "
+                f"Start it with: mlx_lm.server --model {mlx_model}"
+            )
         return LLM(
             model=f"openai/{mlx_model}",
             base_url=settings.mlx_base_url,
@@ -125,8 +130,9 @@ def _run_single_task_with_retry(agent: Any, task: Any, retries: int = 2) -> str:
         except Exception as exc:  # noqa: PERF203
             last_exc = exc
             if attempt < retries:
-                # Brief pause before retrying to avoid hammering the API.
-                time.sleep(5)
+                # Exponential backoff: 5s, 10s, 20s...
+                delay = 5 * (2**attempt)
+                time.sleep(delay)
     raise RuntimeError(
         f"Analysis step failed after {1 + retries} attempt(s): {last_exc}"
     ) from last_exc
@@ -334,7 +340,23 @@ def run_resume_builder(
         ),
         agent=agent,
     )
-    return _run_single_task_with_retry(agent, task)
+    output = _run_single_task_with_retry(agent, task)
+    # Post-generation citation check: verify the generated resume contains at
+    # least one keyword from the source material. If not, the model may have
+    # hallucinated entirely — warn but still return (caller decides).
+    source_tokens = set(tokenize(source_text))
+    output_tokens = set(tokenize(output))
+    overlap = source_tokens & output_tokens
+    if len(source_tokens) > 0 and len(overlap) / len(source_tokens) < 0.1:
+        # Less than 10% overlap — likely hallucination. Log a warning.
+        import warnings
+
+        warnings.warn(
+            "Generated resume has very low keyword overlap with source material. "
+            "Review output carefully for fabricated content.",
+            stacklevel=2,
+        )
+    return output
 
 
 def _parse_match_score(output: str) -> tuple[float, str]:

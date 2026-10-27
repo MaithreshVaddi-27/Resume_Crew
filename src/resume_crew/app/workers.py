@@ -38,8 +38,11 @@ from resume_crew.pipeline import (  # noqa: E402
     build_report_files,
     first_meaningful_line,
     format_resume_ranking,
+    markdown_to_docx,
+    markdown_to_pdf,
     run_llm_analysis,
     run_llm_match_score,
+    run_resume_builder,
     score_resume_path,
 )
 from resume_crew.scoring import (  # noqa: E402
@@ -650,14 +653,6 @@ def build_resume_fn(
             )
             return
         job_text = extract_text(jd_path)
-
-        from resume_crew.pipeline import (  # noqa: PLC0415
-            build_llm,
-            first_meaningful_line,
-            markdown_to_docx,
-            markdown_to_pdf,
-            run_resume_builder,
-        )
 
         yield f"🤖 Connecting to {provider.title()} LLM...", "", "", None, None
         llm, resolved_provider = build_llm(

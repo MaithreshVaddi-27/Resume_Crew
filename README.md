@@ -234,7 +234,7 @@ OLLAMA_PROFILE=auto       # auto detects CUDA > MPS > CPU
 # Required when using --provider gemini.
 # Get this at https://aistudio.google.com/app/apikey — see "Getting an API key" above.
 GEMINI_API_KEY=
-GEMINI_MODEL=gemini/gemini-3.1-flash-lite
+GEMINI_MODEL=gemini/gemini-3.8-flash
 
 CREWAI_TRACING_ENABLED=false
 CREWAI_DISABLE_TELEMETRY=true

@@ -26,7 +26,7 @@ MAX_INPUT_FILE_SIZE_MB = 15
 MAX_EXTRACTED_CHARACTERS = 100_000
 
 # Default LLM models.
-DEFAULT_OLLAMA_MODEL = "gemma3:4b"
+DEFAULT_OLLAMA_MODEL = "gemma3:1b"
 DEFAULT_MLX_MODEL = "mlx-community/Qwen3-4B-Instruct-2507-4bit"
 DEFAULT_GEMINI_MODEL = "gemini/gemini-3.8-flash"
 
