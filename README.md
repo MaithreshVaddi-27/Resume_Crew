@@ -276,11 +276,13 @@ python main.py --version
 
 ## Usage — Web UI (Gradio)
 
-Start the browser interface from the project root (same command on every OS, once your virtual environment is active):
+Start the browser interface once your virtual environment is active:
 
 ```bash
-python app.py
+resume-crew-ui
 ```
+
+From a source checkout, `python app.py` remains a backward-compatible shim.
 
 The UI opens automatically at `http://localhost:7860` and includes:
 

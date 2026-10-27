@@ -28,6 +28,7 @@ dev = [
 
 [project.scripts]
 resume-crew = "resume_crew.cli:main"
+resume-crew-ui = "resume_crew.app.main:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

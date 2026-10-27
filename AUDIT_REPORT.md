@@ -65,8 +65,8 @@ Estimated complexity reduction: **15–25 lines; 0 dependencies**. Findings are 
 ### Current status — 2026-10-27
 
 - **Completed:** cancellation publication race, duplicate Analyze guard, server-local folder-path guidance, mobile settings layout, validated settings-driven UI initialization, accessible History score summaries, and ngrok startup ordering.
-- **Open:** upload-based folder workflows, immediate provider-call cancellation, public-tunnel startup ordering, user-safe error mapping, and removal/documentation of checkout `sys.path` shims.
-- **Verification:** 51 tests passed, 1 skipped; Ruff, formatting, compilation, and `git diff --check` passed; Brave DevTools desktop/mobile checks passed with no console warnings or errors.
+- **Open:** upload-based folder workflows, immediate provider-call cancellation, user-safe error mapping, and removal/documentation of checkout `sys.path` shims.
+- **Verification:** 51 tests passed, 1 skipped; Ruff, formatting, compilation, and `git diff --check` passed; the installed `resume-crew-ui` entry point rendered on port 7863 in Brave DevTools with no console warnings or errors.
 - **Review limitation:** delegated final diff reviews could not run because the configured sub-agent provider returned `401 authentication_failed`; findings below were verified directly.
 
 ### Ranked findings
@@ -79,7 +79,7 @@ Estimated complexity reduction: **15–25 lines; 0 dependencies**. Findings are 
 
 4. **P2 — ngrok is connected before Gradio starts listening — fixed.** The ngrok branch now starts Gradio with `prevent_thread_lock=True`, then creates the tunnel against the listening port and keeps the process alive. Local-only and built-in Gradio sharing paths remain unchanged. `src/resume_crew/app/main.py:603-649`.
 
-5. **P2 — Root UI shim still mutates `sys.path`.** `app.py` is checkout-friendly but conflicts with the project rule against `sys.path.insert` hacks and behaves differently from an installed package. Add a proper installed entry point or document the shim as an intentional source-checkout compatibility path. `app.py:9-14`; `pyproject.toml:29-30`.
+5. **P2 — Root UI shim still mutates `sys.path` — reduced.** Installed users now have the `resume-crew-ui` console command, and the README identifies `python app.py` as a source-checkout compatibility shim. Removing the shim itself remains a follow-up because existing checkout workflows depend on it. `app.py:9-14`; `pyproject.toml:29-31`; `README.md:277-287`.
 
 6. **P2 — Settings controls can display values different from validated runtime settings.** The UI reads raw environment values while workers use normalized `Settings`; an invalid or non-listed Gemini model can appear selected even though runtime settings resolve separately. Initialize controls from one validated settings object and normalize values against dropdown choices. `src/resume_crew/app/main.py:76-115`; `src/resume_crew/app/workers.py:56-69`.
 
@@ -120,4 +120,11 @@ Estimated complexity reduction: **15–25 lines; 0 dependencies**. Findings are 
 
 ### Remaining
 
-The lock intentionally limits concurrent analysis to one process-wide job. Per-user queues/storage isolation, upload-based folder workflows, immediate provider-call cancellation, public-tunnel startup ordering, and user-safe error mapping remain follow-up work. The lock is a local-first guard, not multi-user authorization.
+The lock intentionally limits concurrent analysis to one process-wide job. Per-user queues/storage isolation, upload-based folder workflows, immediate provider-call cancellation, and user-safe error mapping remain follow-up work. The lock is a local-first guard, not multi-user authorization.
+
+### Phase 3 — Packaging and entry points
+
+- Added the installed-package `resume-crew-ui` console entry point and documented it as the preferred UI command. `python app.py` remains a source-checkout compatibility shim. `pyproject.toml:29-31`, `README.md:277-285`.
+- Installed the package successfully in `.venv` after adding the declared `setuptools` build backend there; the system-managed Python was intentionally not overridden after its PEP 668 refusal.
+- Manually launched `.venv/bin/resume-crew-ui` on port `7863`. Brave DevTools loaded the UI, exposed all primary tabs, and reported no warning/error console messages.
+- Full removal of checkout shims and Docker entry-point migration remain optional follow-up work; the installed command now covers normal package usage.
