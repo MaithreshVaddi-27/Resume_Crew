@@ -186,6 +186,8 @@ def main() -> None:
         ValueError,
     ) as exc:
         parser.exit(1, f"Error: {exc}\n")
+    except Exception as exc:  # noqa: BLE001
+        parser.exit(1, f"Error: unexpected failure: {exc}\n")
 
 
 if __name__ == "__main__":

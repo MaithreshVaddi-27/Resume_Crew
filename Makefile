@@ -35,7 +35,7 @@ ui:
 	resume-crew-ui
 
 cli:
-	resume-crew --resume samples/Resumes/sample_resume.pdf --job-description samples/Job_description/sample_job_description.pdf --provider ollama
+	resume-crew --resume samples/Resumes/sample_resume.pdf --job-description samples/Job_description/sample_job_description.pdf --provider mlx
 
 clean:
-	rm -rf venv .pytest_cache __pycache__ src/**/__pycache__ *.egg-info dist build .ruff_cache .mypy_cache
+	rm -rf venv .pytest_cache __pycache__ src/**/__pycache__ *.egg-info dist build .ruff_cache .mypy_cache output/
