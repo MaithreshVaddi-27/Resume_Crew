@@ -1,4 +1,5 @@
 /* Resume Crew: an evidence desk, with paper-like layers and one signal blue. */
+@import url('https://fonts.googleapis.com/css2?family=Fira+Sans:wght@300;400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap');
 :root {
     color-scheme: dark;
     --bg-page: #111318;
@@ -8,9 +9,10 @@
     --accent: #83b5ed;
     --accent-2: #b6d3f4;
     --text: #f0f1f3;
-    --muted: #c0c5ce;
+    --muted: #a8b2c1;
     --radius: 5px;
-    --font-ui: 'Trebuchet MS', 'Segoe UI', system-ui, sans-serif;
+    --font-ui: 'Fira Sans', 'Segoe UI', system-ui, sans-serif;
+    --font-mono: 'Fira Code', 'Consolas', monospace;
 }
 
 body, .gradio-container {
@@ -29,6 +31,8 @@ body, .gradio-container {
     padding: 22px 0 20px;
     margin-bottom: 12px;
     border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 #app-header h1 {
     font-size: 1.55rem;
@@ -180,6 +184,8 @@ body, .gradio-container {
     border-radius: var(--radius) !important;
     padding: 20px !important;
     margin-bottom: 16px !important;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
 }
 
 /* ── Inputs ──────────────────────────────────────────────────────────────── */
@@ -207,10 +213,11 @@ body, .gradio-container {
     font-size: 1rem !important;
     border-radius: var(--radius) !important;
     padding: 11px 22px !important;
-    transition: background-color 0.15s ease-out, border-color 0.15s ease-out !important;
+    transition: background-color 0.15s ease-out, border-color 0.15s ease-out, box-shadow 0.15s ease-out !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     cursor: pointer !important;
 }
-.primary-action button:hover { background: #ffffff !important; border-color: #ffffff !important; }
+.primary-action button:hover { background: #ffffff !important; border-color: #ffffff !important; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4); }
 .secondary-action button {
     background: transparent !important;
     border: 1px solid var(--border) !important;
@@ -238,6 +245,7 @@ body, .gradio-container {
     background: var(--bg-card) !important;
     border: 1px solid var(--border) !important;
     border-left: 4px solid var(--accent) !important;
+    box-shadow: 0 0 20px rgba(131, 181, 237, 0.05);
     border-radius: var(--radius) !important;
     padding: 20px 28px !important;
 }
