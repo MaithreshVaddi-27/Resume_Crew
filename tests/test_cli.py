@@ -22,12 +22,6 @@ def test_settings_reject_invalid_numeric_ranges(monkeypatch, setting: str, value
         Settings.from_env()
 
 
-def test_cli_has_no_word_export_flag() -> None:
-    parser = build_parser()
-    option_strings = {option for action in parser._actions for option in action.option_strings}
-    assert "--export-docx" not in option_strings
-
-
 def test_cli_forces_tracing_and_telemetry_off() -> None:
     _disable_external_tracing()
     assert os.environ["CREWAI_TRACING_ENABLED"] == "false"
@@ -36,16 +30,11 @@ def test_cli_forces_tracing_and_telemetry_off() -> None:
     assert os.environ["OTEL_SDK_DISABLED"] == "true"
 
 
-def test_cli_has_no_history_flag() -> None:
+@pytest.mark.parametrize("flag", ["--export-docx", "--history", "--print-ollama-env"])
+def test_cli_has_no_removed_flags(flag: str) -> None:
     parser = build_parser()
     option_strings = {option for action in parser._actions for option in action.option_strings}
-    assert "--history" not in option_strings
-
-
-def test_cli_has_no_print_ollama_env_flag() -> None:
-    parser = build_parser()
-    option_strings = {option for action in parser._actions for option in action.option_strings}
-    assert "--print-ollama-env" not in option_strings
+    assert flag not in option_strings
 
 
 def test_cli_has_output_flag(tmp_path: Path) -> None:
