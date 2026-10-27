@@ -30,8 +30,11 @@ htmlcov/
 .idea/
 .vscode/
 
-# Do not accidentally commit user documents outside the supplied samples.
+# Keep personal documents out of commits; the versioned samples remain available.
 *.pdf
 *.docx
 !samples/**/*.pdf
 !samples/**/*.docx
+
+# Local tooling state
+.claude/

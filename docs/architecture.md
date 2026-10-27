@@ -9,7 +9,7 @@ Resume Crew is a small, local-first Python package with two installed console co
 | `config.py` | Centralized, validated settings (`Settings.from_env()`). Single source of truth for env vars. |
 | `document_reader.py` | Safe text extraction for PDF/DOCX/TXT/MD with size, encryption, and emptiness validation. |
 | `scoring.py` | Deterministic whole-term keyword overlap score; resume keyword highlighting (HTML). |
-| `hardware.py` | CUDA / Apple MPS / CPU detection and Ollama profile recommendation. |
+| `hardware.py` | CUDA / Apple MPS / CPU detection, Ollama reachability, and local Ollama model discovery. |
 | `pipeline.py` | CrewAI agent orchestration (resume profile → job profile → gap analysis → writer) + Markdown/PDF/DOCX report assembly. Prompts rendered from `prompts/*.md` via `_render_prompt()`. |
 | `storage.py` | Output directory creation, run metadata sidecars, run listing, and report rehydration. |
 | `cli.py` | CLI entry (argparse) for analysis, resume ranking, and hardware checks. |

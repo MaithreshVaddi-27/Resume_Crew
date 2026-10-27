@@ -219,7 +219,8 @@ LLM_PROVIDER=mlx
 
 # MLX-LM OpenAI-compatible server
 MLX_BASE_URL=http://localhost:8080/v1
-MLX_MODEL=mlx-community/Qwen3-4B-4bit
+# Choose an ID shown by `mlx_lm.manage --scan`.
+MLX_MODEL=mlx-community/Qwen3-4B-Instruct-2507-4bit
 
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=gemma3:4b
