@@ -3,7 +3,11 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-blue.svg)](https://www.python.org/downloads/)
 [![UI: Gradio](https://img.shields.io/badge/UI-Gradio-orange.svg)](https://www.gradio.app/)
-[![LLM: MLX%20%7C%20Ollama%20%7C%20Gemini](https://img.shields.io/badge/LLM-MLX%20%7C%20Ollama%20%7C%20Gemini-8A2BE2.svg)](#requirements)
+[![LLM: MLX-LM | Ollama | Gemini](https://img.shields.io/badge/LLM-MLX--LM%20%7C%20Ollama%20%7C%20Gemini-8A2BE2.svg)](#requirements)
+[![MLX-LM](https://img.shields.io/badge/MLX--LM-Apple%20Silicon-green.svg?logo=apple)](https://github.com/ml-explore/mlx-lm)
+[![Ollama](https://img.shields.io/badge/Ollama-local%20LLM-purple.svg)](https://ollama.com/)
+[![CrewAI](https://img.shields.io/badge/Agent%20framework-CrewAI-blue.svg)](https://docs.crewai.com/)
+[![Pyngrok](https://img.shields.io/badge/Tunneling-pyngrok-lightgrey.svg)](https://github.com/alexdeleon/pyngrok)
 
 **Resume Crew** compares a resume against a job description and produces an evidence-focused match report — no invented skills, no guessed experience. Choose MLX-LM or Ollama for local analysis, or Gemini when you are comfortable sending extracted document text to Google.
 
