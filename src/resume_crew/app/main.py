@@ -150,10 +150,16 @@ def build_demo() -> Any:  # gr.Blocks type varies by gradio version
                     scale=2,
                     elem_id="gemini-model-select",
                 )
-                refresh_models_btn = gr.Button("Refresh models", scale=1, variant="secondary")
             provider_status = gr.Markdown(
                 f"Selected provider: {_PROVIDER_LABELS.get(_SETTINGS.provider, 'MLX-LM (Apple Silicon)')}",
                 elem_classes=["provider-status"],
+            )
+            refresh_models_btn = gr.Button(
+                "↻ Refresh models",
+                scale=0,
+                variant="secondary",
+                size="sm",
+                elem_classes=["refresh-link"],
             )
             refresh_models_btn.click(
                 fn=workers.refresh_models,

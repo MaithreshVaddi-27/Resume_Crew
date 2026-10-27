@@ -125,8 +125,27 @@ body, .gradio-container {
     width: 100% !important;
 }
 #mlx-model-select label span, #model-select label span, #provider-select label span { color: var(--muted) !important; }
-.provider-status { margin: 0 14px 12px !important; color: var(--muted) !important; font-size: 0.85rem !important; }
+.provider-status { margin: 0 14px 4px !important; color: var(--muted) !important; font-size: 0.85rem !important; }
 .provider-status p { margin: 0 !important; }
+.refresh-link { margin: 0 14px 12px !important; }
+.refresh-link button {
+    background: transparent !important;
+    border: none !important;
+    color: var(--accent) !important;
+    font-size: 0.85rem !important;
+    font-weight: 500 !important;
+    padding: 2px 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    cursor: pointer !important;
+    text-decoration: none !important;
+    box-shadow: none !important;
+}
+.refresh-link button:hover {
+    color: var(--accent-2) !important;
+    text-decoration: underline !important;
+    background: transparent !important;
+}
 .model-guide { color: var(--muted) !important; margin: 8px 0 16px !important; }
 .model-guide strong { color: var(--text) !important; }
 .workflow-tabs { margin-top: 6px; }
