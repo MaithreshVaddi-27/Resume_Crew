@@ -128,7 +128,7 @@ def list_report_runs(limit: int = 50) -> list[dict[str, Any]]:
                 continue
             score = meta.get("score")
             if (
-                not isinstance(score, (int, float))
+                not isinstance(score, int | float)
                 or not math.isfinite(score)
                 or not 0 <= score <= 100
             ):
