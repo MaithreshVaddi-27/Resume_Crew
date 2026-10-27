@@ -107,7 +107,6 @@ def build_demo() -> Any:  # gr.Blocks type varies by gradio version
                         else PROVIDER_CHOICES[0]
                     ),
                     label="Provider",
-                    info="Choose MLX-LM or Ollama for local analysis, or Gemini for Google’s cloud model.",
                     scale=1,
                     elem_id="provider-select",
                 )
@@ -115,7 +114,6 @@ def build_demo() -> Any:  # gr.Blocks type varies by gradio version
                     choices=_mlx_models()[0],
                     value=_mlx_models()[1] or _SETTINGS.mlx_model,
                     label="MLX model",
-                    info="Choose an MLX-LM model already downloaded on this machine.",
                     allow_custom_value=False,
                     scale=2,
                     visible=_SETTINGS.provider == "mlx",
@@ -125,10 +123,6 @@ def build_demo() -> Any:  # gr.Blocks type varies by gradio version
                     choices=LOCAL_MODELS,
                     value=DEFAULT_LOCAL_MODEL,
                     label="Ollama model",
-                    info=(
-                        "Choose an installed Ollama model. Start with a 4B model; install it "
-                        "with `ollama pull gemma3:4b`."
-                    ),
                     allow_custom_value=False,
                     scale=2,
                     visible=_SETTINGS.provider == "ollama",
@@ -142,10 +136,6 @@ def build_demo() -> Any:  # gr.Blocks type varies by gradio version
                         else GEMINI_MODELS[0][1]
                     ),
                     label="Gemini model",
-                    info=(
-                        "Flash balances speed and quality; Flash-Lite is faster and cheaper; "
-                        "Pro suits harder tasks."
-                    ),
                     visible=_SETTINGS.provider == "gemini",
                     scale=2,
                     elem_id="gemini-model-select",
@@ -153,6 +143,11 @@ def build_demo() -> Any:  # gr.Blocks type varies by gradio version
             provider_status = gr.Markdown(
                 f"Selected provider: {_PROVIDER_LABELS.get(_SETTINGS.provider, 'MLX-LM (Apple Silicon)')}",
                 elem_classes=["provider-status"],
+            )
+            gr.Markdown(
+                "Choose MLX-LM or Ollama for local analysis, or Gemini for Google’s cloud model. "
+                "Model dropdowns show installed models for the selected provider.",
+                elem_classes=["model-guide"],
             )
             refresh_models_btn = gr.Button(
                 "↻ Refresh models",
