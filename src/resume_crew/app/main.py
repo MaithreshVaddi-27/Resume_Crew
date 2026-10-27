@@ -10,7 +10,7 @@ import os
 import signal
 import threading
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from dotenv import load_dotenv
 
@@ -627,7 +627,7 @@ def build_demo() -> gr.Blocks:
         </footer>
         """)
 
-    return demo
+    return cast(gr.Blocks, demo)
 
 
 # ---------------------------------------------------------------------------
