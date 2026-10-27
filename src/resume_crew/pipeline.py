@@ -392,24 +392,12 @@ def _clean_llm_output(text: str) -> str:
 
     lines = text.splitlines()
     out: list[str] = []
-    in_empty_fence = False
 
     for line in lines:
         stripped = line.strip()
 
-        # Detect opening/closing fences.
-        if stripped.startswith("```"):
-            if stripped == "```" and not in_empty_fence:
-                in_empty_fence = True
-                continue
-            if in_empty_fence and stripped == "```":
-                in_empty_fence = False
-                continue
-            in_empty_fence = False
-            continue
-
-        # Skip lines inside an empty fenced block.
-        if in_empty_fence:
+        # Remove standalone fence lines (opening/closing fence with no content).
+        if stripped == "```":
             continue
 
         # Drop malformed headers like '####**Languages**', '### ```', or

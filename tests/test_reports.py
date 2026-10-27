@@ -119,6 +119,27 @@ Some real content here.
     assert "####**" not in cleaned
     assert cleaned.count("## Real Heading") == 1
     assert "Some real content here." in cleaned
-    # Empty fenced blocks and malformed headers removed; real heading kept.
-    assert cleaned.count("## Real Heading") == 1
-    assert "Some real content here." in cleaned
+
+
+def test_clean_llm_output_preserves_non_empty_code_blocks() -> None:
+    from resume_crew.pipeline import _clean_llm_output
+
+    raw = """## Analysis
+
+Some prose text.
+
+```
+def hello():
+    print("world")
+```
+
+## Another Heading
+More content here.
+"""
+    cleaned = _clean_llm_output(raw)
+    # Standalone fence lines removed, but code block content preserved.
+    assert "```" not in cleaned
+    assert "def hello():" in cleaned
+    assert 'print("world")' in cleaned
+    assert "## Another Heading" in cleaned
+    assert "More content here." in cleaned
