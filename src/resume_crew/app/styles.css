@@ -106,17 +106,23 @@ body, .gradio-container {
     max-width: none;
     margin: 0 !important;
     padding: 0 14px 12px !important;
-    align-items: flex-start !important;
+    align-items: stretch !important;
     gap: 12px !important;
 }
 #settings-accordion .model-toolbar > *,
 #settings-accordion .model-toolbar > div {
     min-width: 0 !important;
+    align-self: stretch !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-end !important;
 }
 #settings-accordion .model-toolbar button {
     white-space: nowrap;
-    margin-top: 30px !important;
+    align-self: flex-end !important;
+    margin-top: auto !important;
     min-height: 44px !important;
+    width: 100% !important;
 }
 #mlx-model-select label span, #model-select label span, #provider-select label span { color: var(--muted) !important; }
 .provider-status { margin: 0 14px 12px !important; color: var(--muted) !important; font-size: 0.85rem !important; }
