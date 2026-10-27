@@ -7,6 +7,7 @@ long-running LLM pipeline logic lives in one place.
 from __future__ import annotations
 
 import io
+import logging
 import queue
 import threading
 from collections.abc import Iterator
@@ -18,6 +19,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import gradio as gr  # noqa: E402
+
+logger = logging.getLogger(__name__)
 
 from resume_crew.config import MAX_EXTRACTED_CHARACTERS, load_settings  # noqa: E402
 from resume_crew.document_reader import (  # noqa: E402
@@ -104,6 +107,12 @@ def split_writer_output_safe(writer_output: str) -> tuple[str, str]:
         return split_writer_output(writer_output)
     except ValueError:
         return writer_output, ""
+
+
+def _user_error(message: str, exc: Exception) -> str:
+    """Log details server-side while keeping local paths and provider internals out of the UI."""
+    logger.exception("%s: %s", message, exc)
+    return f"❌ {message}. Check the inputs and provider settings, then try again."
 
 
 # ---------------------------------------------------------------------------
@@ -195,8 +204,9 @@ def _run_analysis_thread(
         step_q.put(f"🛑 {exc}")
         result_q.put(("cancelled", str(exc)))
     except Exception as exc:  # noqa: BLE001
-        step_q.put(f"❌ Error: {exc}")
-        result_q.put(("error", str(exc)))
+        message = _user_error("Analysis could not be completed", exc)
+        step_q.put(message)
+        result_q.put(("error", message))
     finally:
         _analysis_lock.release()
         step_q.put(None)  # Sentinel — signals the generator to stop polling.
@@ -266,7 +276,7 @@ def analyze_stream(
         yield f"🛑 {result[1]}", *EMPTY_TABS, None
         return
     if result[0] == "error":
-        yield f"❌ Analysis failed:\n\n{result[1]}", *EMPTY_TABS, None
+        yield str(result[1]), *EMPTY_TABS, None
         return
 
     (
@@ -385,8 +395,8 @@ def rank_resumes_fn(
             )
             results.append(score_resume_path(path, job_text, llm))
         yield format_resume_ranking(results)
-    except Exception as exc:
-        yield f"❌ {exc}"
+    except Exception as exc:  # noqa: BLE001
+        yield _user_error("Resume ranking could not be completed", exc)
 
 
 # ---------------------------------------------------------------------------
@@ -455,7 +465,7 @@ def batch_analyze_fn(
 
                 results.append((path.name, score.score, str(directory)))
             except Exception as exc:  # noqa: BLE001
-                results.append((path.name, None, f"❌ {exc}"))
+                results.append((path.name, None, _user_error("Resume analysis failed", exc)))
 
         results.sort(key=lambda item: (item[1] is None, -(item[1] or 0)))
         lines = ["| Rank | Resume | Score | Saved To |", "|---:|---|---:|---|"]
@@ -467,8 +477,8 @@ def batch_analyze_fn(
 
         log_lines.append("✅ Batch analysis complete.")
         yield "\n".join(log_lines) + "\n\n# Batch Analysis Results\n\n" + "\n".join(lines)
-    except Exception as exc:
-        yield f"❌ {exc}"
+    except Exception as exc:  # noqa: BLE001
+        yield _user_error("Batch analysis could not be completed", exc)
 
 
 # ---------------------------------------------------------------------------
@@ -511,8 +521,8 @@ def compare_jds_fn(
                 job_text = extract_text(jd_path)
                 score, note = run_llm_match_score(resume_text, job_text, llm)
                 results.append((name, score, note))
-            except Exception as exc:
-                results.append((name, None, str(exc) or "(unknown error)"))
+            except Exception as exc:  # noqa: BLE001
+                results.append((name, None, _user_error("Job description scoring failed", exc)))
 
         results.sort(key=lambda item: (item[1] is None, -(item[1] or 0)))
         lines = ["| Rank | Job Description | Score | Notes |", "|---:|---|---:|---|"]
@@ -524,8 +534,8 @@ def compare_jds_fn(
             )
 
         yield "# Job Description Comparison\n\n" + "\n".join(lines)
-    except Exception as exc:
-        yield f"❌ {exc}"
+    except Exception as exc:  # noqa: BLE001
+        yield _user_error("Job comparison could not be completed", exc)
 
 
 # ---------------------------------------------------------------------------
@@ -623,7 +633,8 @@ def build_resume_fn(
             docx_path = str(directory / "generated_resume.docx")
             Path(docx_path).write_bytes(buf.getvalue())
         except Exception as exc:  # noqa: BLE001
-            resume_md += f"\n\n---\n*⚠️ Export to PDF/Word failed: {exc}*"
+            logger.exception("Resume export failed: %s", exc)
+            resume_md += "\n\n---\n*⚠️ PDF/Word export was unavailable for this draft.*"
 
         yield (
             f"✅ Draft ready — saved to `{directory}`",
@@ -632,8 +643,8 @@ def build_resume_fn(
             pdf_path,
             docx_path,
         )
-    except Exception as exc:
-        yield f"❌ {exc}", "", "", None, None
+    except Exception as exc:  # noqa: BLE001
+        yield _user_error("Resume drafting could not be completed", exc), "", "", None, None
 
 
 # ---------------------------------------------------------------------------

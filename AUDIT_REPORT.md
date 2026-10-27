@@ -128,3 +128,11 @@ The lock intentionally limits concurrent analysis to one process-wide job. Per-u
 - Installed the package successfully in `.venv` after adding the declared `setuptools` build backend there; the system-managed Python was intentionally not overridden after its PEP 668 refusal.
 - Manually launched `.venv/bin/resume-crew-ui` on port `7863`. Brave DevTools loaded the UI, exposed all primary tabs, and reported no warning/error console messages.
 - Full removal of checkout shims and Docker entry-point migration remain optional follow-up work; the installed command now covers normal package usage.
+
+### Final hardening pass — 2026-10-27
+
+- Worker exceptions now log full diagnostics server-side and return concise actionable messages to the UI, avoiding disclosure of local paths and provider internals in shared Markdown outputs. `src/resume_crew/app/workers.py`.
+- Resume ranking continues to use the shared Markdown table formatter; supported folder workflows and checkout shims were retained because they remain documented user-facing paths.
+- Backend smoke checks covered ranking output and error redaction with mocked provider boundaries. The full regression suite, Ruff lint, formatting, and diff checks passed.
+- Manual Brave DevTools verification on the installed UI confirmed readable typography, strong dark-theme contrast, aligned settings controls, accessible labels/tabs/buttons, working History chart and score summary, and no browser warnings or errors. No visual CSS changes were needed in this pass.
+- Deferred: upload-based folder workflows and immediate cancellation during provider calls; both require broader workflow contracts rather than safe local cleanup.
