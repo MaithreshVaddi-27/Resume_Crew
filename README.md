@@ -1,7 +1,7 @@
 # Resume Crew
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-blue.svg)](https://www.python.org/downloads/)
 [![UI: Gradio](https://img.shields.io/badge/UI-Gradio-orange.svg)](https://www.gradio.app/)
 [![LLM: MLX%20%7C%20Ollama%20%7C%20Gemini](https://img.shields.io/badge/LLM-MLX%20%7C%20Ollama%20%7C%20Gemini-8A2BE2.svg)](#requirements)
 
@@ -60,7 +60,7 @@ The deterministic keyword score is a **whole-term overlap signal**, not an ATS s
 
 ## Requirements
 
-- Python 3.10 or newer
+- Python 3.12 or newer
 - One LLM provider for full analysis:
   - **MLX-LM** (recommended on Apple Silicon) — runs locally through its OpenAI-compatible server
   - **Ollama** — runs locally, keeps data on your machine, no API key needed
@@ -94,7 +94,7 @@ Then follow the instructions for your OS below.
 
 ### macOS
 
-1. Install Python 3.10+ from [python.org](https://www.python.org/downloads/) or via Homebrew (`brew install python`).
+1. Install Python 3.12+ from [python.org](https://www.python.org/downloads/) or via Homebrew (`brew install python`).
 2. In Terminal, from the project folder:
 
    ```bash
@@ -136,7 +136,7 @@ resume-crew --check-hardware
 
 ### Windows (PowerShell)
 
-1. Install Python 3.10+ from [python.org](https://www.python.org/downloads/) and select **Add Python to PATH** during setup.
+1. Install Python 3.12+ from [python.org](https://www.python.org/downloads/) and select **Add Python to PATH** during setup.
 2. Open PowerShell in the project folder:
 
    ```powershell
@@ -408,12 +408,14 @@ CrewAI execution traces and telemetry are disabled by default, both in `.env.exa
 Install development tools with `pip install -e '.[dev]'`.
 
 ```bash
-python -m pytest -q
+python -m pytest --cov=src --cov-report=term-missing
 python -m compileall -q src
 python -m pip check
 ```
 
 The test suite covers document validation, keyword scoring (including single-character tokens like `R`), report structure, CRLF handling, output safety, timestamp format, and hardware-setting validation. A live LLM run requires a running MLX-LM or Ollama server, or valid Gemini credentials.
+
+Coverage is reported on every CI run via `pytest --cov=src --cov-report=term-missing`.
 
 ## Disclaimer
 

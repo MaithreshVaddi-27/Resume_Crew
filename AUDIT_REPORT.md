@@ -29,7 +29,7 @@ The project has a cohesive purpose and a sensible separation between CLI, Gradio
 ## Quality and operations
 
 - Focused regression coverage now exercises score parsing, malformed Ollama payloads, config boundaries, interrupted writes, concurrent run creation, oversized notes, and incremental PDF limits across the test suite.
-- CI currently targets Python 3.10. Add other supported Python versions and package install/build smoke checks if compatibility across that range becomes a release requirement.
+- CI currently targets Python 3.12. Add other supported Python versions and package install/build smoke checks if compatibility across that range becomes a release requirement.
 - Review batch/ranking output formatting and accessible error presentation during the remaining UI audit.
 - Privacy boundaries are documented in the README and deployment guide: Ollama is local, Gemini receives extracted text, reports stay in the local output directory, and public tunnels require credentials.
 - Optional dependency groups remain a packaging choice; split them only if minimal CLI installation is an explicit requirement.

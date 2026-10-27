@@ -20,7 +20,7 @@ pre-commit install  # optional: run ruff on each commit
 5. Open a pull request against `main`.
 
 ## Pull request checklist
-- [ ] Tests pass (`python -m pytest`).
+- [ ] Tests pass (`python -m pytest --cov=src`).
 - [ ] Lint is clean (`ruff check src tests`).
 - [ ] Format is clean (`ruff format --check src tests`).
 - [ ] Types check (`mypy --config-file pyproject.toml src`).
@@ -28,7 +28,7 @@ pre-commit install  # optional: run ruff on each commit
 - [ ] No secrets or `.env` content committed.
 
 ## Code style
-- Python 3.10+, type annotations, `from __future__ import annotations`.
+- Python 3.12+, type annotations, `from __future__ import annotations`.
 - Ruff config lives in `pyproject.toml` (`[tool.ruff]`).
 - Line length 100; docstrings on public modules/functions.
 

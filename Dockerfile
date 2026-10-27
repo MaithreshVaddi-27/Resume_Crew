@@ -2,7 +2,7 @@
 # Build:  docker build -t resume-crew .
 # Run:    docker run -p 7860:7860 --env-file .env resume-crew
 
-FROM python:3.10-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 

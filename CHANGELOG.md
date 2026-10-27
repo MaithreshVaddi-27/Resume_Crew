@@ -36,6 +36,8 @@ All notable changes to Resume Crew are documented here.
 - Hardware check tab: Ollama reachability, CUDA/MPS/CPU profile, and model recommendation.
 - ngrok live-share support with mandatory auth guard; Gradio built-in share as fallback.
 - Report input size limits and atomic write to prevent partial/corrupted history entries.
+- `tests/test_llm_provider.py`: build_llm coverage for MLX, Ollama, and Gemini providers.
+- CI test coverage reporting via `pytest --cov=src --cov-report=term-missing`.
 
 ### Changed
 - Provider selection is explicit: choose MLX-LM, Ollama, or Gemini, then choose that provider's model; automatic provider fallback has been removed.
@@ -44,8 +46,13 @@ All notable changes to Resume Crew are documented here.
 - Footer uses semantic `<footer>` element styled via CSS rule rather than inline override.
 - Settings accordion replaces per-tab model selectors; provider/model choice is global.
 - Auth required when public sharing is enabled (ngrok or Gradio share).
+- `make lint`, `make test`, `make typecheck`, CI: Python target aligned to 3.12 (ruff `target-version`, CI `python-version`).
+- CLI default provider in `make cli` changed from ollama to mlx (matches `LLM_PROVIDER` default).
+- CLI `main()` gained a catch-all `Exception` handler so unexpected errors exit cleanly instead of tracebacking.
 
 ### Fixed
 - Report history loading with missing or malformed JSON gracefully skipped.
 - Resume input character limit (`MAX_EXTRACTED_CHARACTERS`) enforced before LLM call.
 - Stale `output/` path resolution made relative to project root via `config.OUTPUT_ROOT`.
+- Ruff `S603`/`S607` noqa split onto separate lines so ruff `0.9.0` (CI) and `0.16.6` (local) both pass.
+- `ngrok.connect(port, ...)` now passes `str(port)` so mypy passes on Python 3.12 strict mode.
