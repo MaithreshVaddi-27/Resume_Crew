@@ -28,11 +28,12 @@ from resume_crew.config import load_settings  # noqa: E402
 from resume_crew.document_reader import SUPPORTED_DOCUMENT_EXTENSIONS  # noqa: E402
 
 _SETTINGS = load_settings()
-PROVIDER_CHOICES = ["auto", "ollama", "gemini"]
+PROVIDER_CHOICES = ["ollama", "gemini"]
 PRIVACY_NOTICE = (
     "Ollama keeps analysis on this machine. Gemini sends extracted document text "
-    "to Google. Automatic may use Gemini if Ollama is unavailable."
+    "to Google. Choose the provider and model that fit this run."
 )
+_PROVIDER_LABELS = {"ollama": "Ollama (local)", "gemini": "Gemini (cloud)"}
 GEMINI_MODELS = [
     ("Gemini 3.8 Flash · recommended", "gemini/gemini-3.8-flash"),
     ("Gemini 3.6 Flash", "gemini/gemini-3.6-flash"),
@@ -79,17 +80,14 @@ def build_demo() -> gr.Blocks:
         with gr.Accordion("Analysis settings", open=False, elem_id="settings-accordion"):
             with gr.Row(elem_classes=["model-toolbar"]):
                 provider_dd = gr.Dropdown(
-                    choices=[
-                        ("Automatic (Ollama, then Gemini)", "auto"),
-                        ("Ollama (local)", "ollama"),
-                        ("Gemini (cloud)", "gemini"),
-                    ],
-                    value=_SETTINGS.provider,
-                    label="Provider",
-                    info=(
-                        "Choose Gemini for cloud analysis, or Ollama to keep prompts local. "
-                        "Automatic prefers Ollama when available."
+                    choices=[(_PROVIDER_LABELS[name], name) for name in PROVIDER_CHOICES],
+                    value=(
+                        _SETTINGS.provider
+                        if _SETTINGS.provider in PROVIDER_CHOICES
+                        else PROVIDER_CHOICES[0]
                     ),
+                    label="Provider",
+                    info="Choose Ollama for local analysis or Gemini to use Google’s cloud model.",
                     scale=1,
                     elem_id="provider-select",
                 )
@@ -98,11 +96,12 @@ def build_demo() -> gr.Blocks:
                     value=DEFAULT_LOCAL_MODEL,
                     label="Ollama model",
                     info=(
-                        "Used with Ollama, or as Automatic's fallback. Start with a 4B model; "
-                        "install with `ollama pull gemma3:4b`."
+                        "Choose an installed Ollama model. Start with a 4B model; install it "
+                        "with `ollama pull gemma3:4b`."
                     ),
                     allow_custom_value=False,
                     scale=2,
+                    visible=_SETTINGS.provider == "ollama",
                     elem_id="model-select",
                 )
                 gemini_model_dd = gr.Dropdown(
@@ -122,27 +121,34 @@ def build_demo() -> gr.Blocks:
                     elem_id="gemini-model-select",
                 )
                 refresh_models_btn = gr.Button("Refresh models", scale=1, variant="secondary")
+            provider_status = gr.Markdown(
+                f"Selected provider: {_PROVIDER_LABELS.get(_SETTINGS.provider, 'Ollama (local)')}",
+                elem_classes=["provider-status"],
+            )
             refresh_models_btn.click(
                 fn=workers.refresh_local_models,
                 inputs=[model_dd],
                 outputs=[model_dd],
             )
 
-            def update_model_controls(provider: str) -> tuple[Any, Any]:
+            def update_model_controls(provider: str) -> tuple[Any, Any, Any]:
                 return (
-                    gr.update(visible=provider != "gemini"),
+                    gr.update(visible=provider == "ollama"),
                     gr.update(visible=provider == "gemini"),
+                    gr.update(
+                        value=f"Selected provider: {_PROVIDER_LABELS.get(provider, provider)}"
+                    ),
                 )
 
             provider_dd.change(
                 fn=update_model_controls,
                 inputs=[provider_dd],
-                outputs=[model_dd, gemini_model_dd],
+                outputs=[model_dd, gemini_model_dd, provider_status],
             )
             demo.load(
                 fn=update_model_controls,
                 inputs=[provider_dd],
-                outputs=[model_dd, gemini_model_dd],
+                outputs=[model_dd, gemini_model_dd, provider_status],
             )
 
         with gr.Tabs(elem_classes=["workflow-tabs"]):

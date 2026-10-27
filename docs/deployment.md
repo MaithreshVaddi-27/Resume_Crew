@@ -35,7 +35,7 @@ Mounts `./output` so generated reports persist on the host. The mounted director
 
 ## Environment
 Copy `.env.example` to `.env` and set at minimum:
-- `LLM_PROVIDER=auto` (or `ollama` / `gemini`)
+- `LLM_PROVIDER=ollama` (or `gemini` when using Google AI)
 - `GEMINI_API_KEY` (only if using Gemini)
 
 `.env` is gitignored — never commit it.

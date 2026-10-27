@@ -5,7 +5,7 @@
 [![UI: Gradio](https://img.shields.io/badge/UI-Gradio-orange.svg)](https://www.gradio.app/)
 [![LLM: Ollama%20%7C%20Gemini](https://img.shields.io/badge/LLM-Ollama%20%7C%20Gemini-8A2BE2.svg)](#requirements)
 
-**Resume Crew** compares a resume against a job description and produces an evidence-focused match report — no invented skills, no guessed experience. It runs entirely on your machine by default (via [Ollama](https://ollama.com)), with an optional cloud fallback to Google Gemini.
+**Resume Crew** compares a resume against a job description and produces an evidence-focused match report — no invented skills, no guessed experience. Choose Ollama for local analysis or Gemini when you are comfortable sending extracted document text to Google.
 
 **Maintainer:** Maithresh Vaddi
 
@@ -63,13 +63,13 @@ The deterministic keyword score is a **whole-term overlap signal**, not an ATS s
 - Python 3.10 or newer
 - One LLM provider for full analysis:
   - **Ollama** (recommended) — runs locally, keeps data on your machine, no API key needed
-  - **Gemini** (optional) — cloud fallback; needs an API key and sends document text to Google
+  - **Gemini** (optional) — cloud analysis; needs an API key and sends document text to Google
 
 Hardware diagnostics (`--check-hardware`) work with no LLM provider configured. Resume ranking uses the LLM too, so it needs a working provider just like full analysis does.
 
 ## Getting an API key (optional — only for Gemini)
 
-You only need this if you want to use `--provider gemini`, or as a fallback when Ollama isn't running. If you're staying fully local with Ollama, skip this section.
+You only need this if you want to use `--provider gemini`. If you are staying fully local with Ollama, skip this section.
 
 1. Go to **[Google AI Studio → API Keys](https://aistudio.google.com/app/apikey)** and sign in with a Google account.
 2. Click **Create API key**, and select or create a Google Cloud project when prompted (no billing account required for the free tier).
@@ -195,15 +195,15 @@ Then open `.env` and set the values you need. The most relevant settings:
 RESUME_PATH=./samples/Resumes/sample_resume.pdf
 JD_PATH=./samples/Job_description/sample_job_description.pdf
 
-# auto = use local Ollama when reachable, then fall back to Gemini.
-LLM_PROVIDER=auto
+# Choose exactly one provider for each run: ollama or gemini.
+LLM_PROVIDER=ollama
 
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=gemma3:4b
 OLLAMA_TIMEOUT=3.0        # Raise this on slow machines or WSL2
 OLLAMA_PROFILE=auto       # auto detects CUDA > MPS > CPU
 
-# Only needed for --provider gemini, or as the auto fallback.
+# Required when using --provider gemini.
 # Get this at https://aistudio.google.com/app/apikey — see "Getting an API key" above.
 GEMINI_API_KEY=
 GEMINI_MODEL=gemini/gemini-3.1-flash-lite
@@ -351,7 +351,7 @@ CrewAI execution traces and telemetry are disabled by default, both in `.env.exa
 |---|---|
 | `ModuleNotFoundError` on startup | Activate the project virtual environment and run `pip install .`. |
 | `Ollama is not reachable` | Start the Ollama application/service, run `ollama pull gemma3:4b`, then retry. Raise `OLLAMA_TIMEOUT` in `.env` if on a slow machine. |
-| Gemini fallback error | Add a valid `GEMINI_API_KEY` to `.env` (see [Getting an API key](#getting-an-api-key-optional--only-for-gemini)), or use `--provider ollama`. |
+| Gemini configuration error | Add a valid `GEMINI_API_KEY` to `.env` (see [Getting an API key](#getting-an-api-key-optional--only-for-gemini)) before selecting `--provider gemini`. |
 | PDF has no extractable text | The PDF is likely scanned. Run OCR first, then supply the OCR result. |
 | Unsupported file type | Convert the file to PDF, DOCX, TXT, or Markdown. |
 | Input exceeds character limit | Split the document or remove irrelevant appendices. |

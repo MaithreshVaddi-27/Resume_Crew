@@ -117,6 +117,8 @@ body, .gradio-container {
     white-space: nowrap;
 }
 #model-select label span, #provider-select label span { color: var(--muted) !important; }
+.provider-status { margin: 0 14px 12px !important; color: var(--muted) !important; font-size: 0.85rem !important; }
+.provider-status p { margin: 0 !important; }
 .model-guide { color: var(--muted) !important; margin: 8px 0 16px !important; }
 .model-guide strong { color: var(--text) !important; }
 .workflow-tabs { margin-top: 6px; }

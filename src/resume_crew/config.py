@@ -30,7 +30,7 @@ DEFAULT_OLLAMA_MODEL = "gemma3:4b"
 DEFAULT_GEMINI_MODEL = "gemini/gemini-3.8-flash"
 
 # Valid providers / hardware profiles.
-VALID_PROVIDERS = ("auto", "ollama", "gemini")
+VALID_PROVIDERS = ("ollama", "gemini")
 VALID_OLLAMA_PROFILES = ("auto", "cuda", "mps", "cpu")
 
 
@@ -62,7 +62,7 @@ class Settings:
         def _get(name: str, default: str = "") -> str:
             return os.getenv(name, default)
 
-        provider = _get("LLM_PROVIDER", "auto").strip().lower()
+        provider = _get("LLM_PROVIDER", "ollama").strip().lower()
         if provider not in VALID_PROVIDERS:
             raise ValueError(f"LLM_PROVIDER must be one of {VALID_PROVIDERS}, got {provider!r}")
 

@@ -61,13 +61,12 @@ from resume_crew.storage import (  # noqa: E402
 _analysis_lock = threading.Lock()
 
 
-def local_model_choices() -> tuple[list[str], str]:
-    """Return installed local models, falling back to the configured Ollama model."""
+def local_model_choices() -> tuple[list[str], str | None]:
+    """Return installed local models and the configured selection when available."""
     settings = load_settings()
     models = list_ollama_models(settings.ollama_base_url, settings.ollama_timeout)
-    if settings.ollama_model not in models:
-        models.insert(0, settings.ollama_model)
-    return models, settings.ollama_model
+    default_model = settings.ollama_model if settings.ollama_model in models else None
+    return models, default_model
 
 
 def refresh_local_models(current: str | None) -> Any:
