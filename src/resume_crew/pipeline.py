@@ -380,6 +380,62 @@ def _renumber_loose_questions(section_text: str) -> str:
     return "\n".join(out)
 
 
+def _clean_llm_output(text: str) -> str:
+    """Strip LLM artifacts from agent output before assembling reports.
+
+    Removes empty fenced code blocks (```` blocks with no content between
+    them) and malformed headers such as '####**Languages**' that some models
+    emit when they drift off the requested Markdown shape.
+    """
+    # Normalize line endings first.
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+
+    lines = text.splitlines()
+    out: list[str] = []
+    in_empty_fence = False
+
+    for line in lines:
+        stripped = line.strip()
+
+        # Detect opening/closing fences.
+        if stripped.startswith("```"):
+            if stripped == "```" and not in_empty_fence:
+                in_empty_fence = True
+                continue
+            if in_empty_fence and stripped == "```":
+                in_empty_fence = False
+                continue
+            in_empty_fence = False
+            continue
+
+        # Skip lines inside an empty fenced block.
+        if in_empty_fence:
+            continue
+
+        # Drop malformed headers like '####**Languages**', '### ```', or
+        # '####### ' (heading-ish lines that aren't real sections).
+        if re.match(r"^#{1,9}\s*\*+", stripped):
+            continue
+        if re.match(r"^#{1,9}\s*```", stripped):
+            continue
+        if re.match(r"^#{7,9}\s*$", stripped):
+            continue
+        # Drop empty headings or headings followed only by backticks/whitespace
+        # (e.g. bare '### ', '### ```', '### `'). Real headings always have
+        # section text after the hashes.
+        if re.match(r"^#{1,6}[`\s]*$", stripped):
+            continue
+
+        out.append(line)
+
+    text = "\n".join(out)
+
+    # Collapse runs of 3+ blank lines down to 2.
+    text = re.sub(r"\n{3,}", "\n\n", text)
+
+    return text.strip()
+
+
 def split_writer_output(text: str) -> tuple[str, str]:
     # Normalize line endings before applying patterns — LLM output can mix CRLF/LF.
     text = text.replace("\r\n", "\n").replace("\r", "\n")
@@ -424,6 +480,13 @@ def build_report_files(
     gap_analysis: str,
     writer_output: str,
 ) -> dict[str, str]:
+    # Sanitize LLM output: drop empty fenced code blocks and malformed headers
+    # before they reach the report files.
+    resume_profile = _clean_llm_output(resume_profile)
+    job_profile = _clean_llm_output(job_profile)
+    gap_analysis = _clean_llm_output(gap_analysis)
+    writer_output = _clean_llm_output(writer_output)
+
     bullets, interview = split_writer_output(writer_output)
     score_markdown = format_keyword_score(score)
 

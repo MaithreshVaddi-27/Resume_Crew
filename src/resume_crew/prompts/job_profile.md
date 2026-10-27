@@ -21,7 +21,7 @@ Group related items under one bold label. Never write a bare comma-separated lis
 Do not include candidate information, resume content, or hiring advice.
 
 # Format
-Markdown with '## ' headings and '- **Label:** full explanatory sentence' bullets throughout.
+Markdown with '## ' headings and '- **Label:** full explanatory sentence' bullets throughout. NO code blocks (no ``` fences). NO empty sections. Use only clean '- **Label:** sentence' bullets.
 
 # Tone
 Clinical, requirement-only, neutral.

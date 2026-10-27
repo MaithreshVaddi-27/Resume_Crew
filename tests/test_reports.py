@@ -95,3 +95,30 @@ def test_pdf_safe_text_converts_smart_quotes_and_emojis() -> None:
     safe = _pdf_safe_text(raw)
     assert '"smart text"' in safe
     assert "[OK]" in safe
+
+
+def test_clean_llm_output_removes_empty_code_blocks() -> None:
+    from resume_crew.pipeline import _clean_llm_output
+
+    raw = """## Analysis
+
+### ```
+### ```
+
+####### ```
+
+### ```
+
+### 
+
+## Real Heading
+Some real content here.
+"""
+    cleaned = _clean_llm_output(raw)
+    assert "```" not in cleaned
+    assert "####**" not in cleaned
+    assert cleaned.count("## Real Heading") == 1
+    assert "Some real content here." in cleaned
+    # Empty fenced blocks and malformed headers removed; real heading kept.
+    assert cleaned.count("## Real Heading") == 1
+    assert "Some real content here." in cleaned

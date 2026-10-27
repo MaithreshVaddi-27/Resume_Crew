@@ -15,7 +15,7 @@ Return Markdown sections:
 Every assertion must be traceable to the supplied profiles. Do not introduce outside knowledge.
 
 # Format
-Markdown headings and bullets. Traceable assertions only.
+Markdown headings and bullets only. NO code blocks (no ``` fences). NO empty sections. Use only '- ' bullets under each heading. Every assertion must be traceable to the supplied profiles. Do not introduce outside knowledge.
 
 # Tone
 Analytical, cautious, evidence-bound.

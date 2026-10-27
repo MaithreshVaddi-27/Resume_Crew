@@ -16,7 +16,7 @@ Constraints:
 - Never return a question as a bare unformatted line.
 
 # Format
-Markdown: '## Tailored Resume Bullets' then '## Interview Prep Guide'. Bullets as '- ' items; questions as '1.'-style numbered list with '*Answer hint:*' lines.
+Markdown: '## Tailored Resume Bullets' then '## Interview Prep Guide'. Bullets as '- ' items; questions as '1.'-style numbered list with '*Answer hint:*' lines. NO code blocks (no ``` fences). NO empty sections.
 
 # Tone
 Honest, helpful, conservative. Accuracy over impressiveness.

@@ -27,7 +27,7 @@ Example of incorrect form (do not use):
 Do not include advice, opinions, or facts not present in this source.
 
 # Format
-Markdown with '## ' headings and '- **Label:** full explanatory sentence' bullets throughout.
+Markdown with '## ' headings and '- **Label:** full explanatory sentence' bullets throughout. NO code blocks (no ``` fences). NO empty sections. NO malformed headers like '####**'. Use only clean '- **Label:** sentence' bullets.
 
 # Tone
 Clinical, evidence-only, neutral. No embellishment.
