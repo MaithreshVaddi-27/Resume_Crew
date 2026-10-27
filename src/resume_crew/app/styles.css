@@ -53,6 +53,15 @@ body, .gradio-container {
     font-size: 0.92rem !important;
 }
 .privacy-note p { margin: 0 !important; }
+/* Gradio applies the same class to the outer block and inner Markdown wrapper. */
+.privacy-note .privacy-note {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+    font-size: inherit !important;
+}
 .brand-mark {
     display: grid;
     place-items: center;

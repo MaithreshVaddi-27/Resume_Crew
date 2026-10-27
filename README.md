@@ -7,6 +7,8 @@
 
 **Resume Crew** compares a resume against a job description and produces an evidence-focused match report — no invented skills, no guessed experience. It runs entirely on your machine by default (via [Ollama](https://ollama.com)), with an optional cloud fallback to Google Gemini.
 
+**Maintainer:** Maithresh Vaddi
+
 It ships two ways to use it:
 
 - **CLI** (`resume-crew`) — scriptable, good for batch/automation work

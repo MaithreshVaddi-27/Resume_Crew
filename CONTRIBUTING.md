@@ -2,6 +2,8 @@
 
 Thanks for contributing! Please follow these guidelines.
 
+**Maintainer:** Maithresh Vaddi
+
 ## Setup
 ```bash
 git clone https://github.com/MaithreshVaddi-27/Resume_Crew
