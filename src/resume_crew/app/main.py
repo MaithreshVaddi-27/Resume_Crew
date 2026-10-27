@@ -38,11 +38,7 @@ _PROVIDER_LABELS = {
     "ollama": "Ollama (local)",
     "gemini": "Gemini (cloud)",
 }
-MLX_MODELS = [
-    ("Qwen3 4B · recommended", "mlx-community/Qwen3-4B-4bit"),
-    ("Llama 3.2 3B", "mlx-community/Llama-3.2-3B-Instruct-4bit"),
-    ("Mistral 7B", "mlx-community/Mistral-7B-Instruct-v0.3-4bit"),
-]
+MLX_MODELS, DEFAULT_MLX_MODEL = workers.mlx_model_choices()
 GEMINI_MODELS = [
     ("Gemini 3.8 Flash · recommended", "gemini/gemini-3.8-flash"),
     ("Gemini 3.6 Flash", "gemini/gemini-3.6-flash"),
@@ -102,13 +98,10 @@ def build_demo() -> gr.Blocks:
                 )
                 mlx_model_dd = gr.Dropdown(
                     choices=MLX_MODELS,
-                    value=(
-                        _SETTINGS.mlx_model
-                        if _SETTINGS.mlx_model in dict(MLX_MODELS).values()
-                        else MLX_MODELS[0][1]
-                    ),
+                    value=DEFAULT_MLX_MODEL,
                     label="MLX model",
-                    info="Choose a Hugging Face MLX model. It downloads on first use and runs locally.",
+                    info="Choose an MLX-LM model already downloaded on this machine.",
+                    allow_custom_value=False,
                     scale=2,
                     visible=_SETTINGS.provider == "mlx",
                     elem_id="mlx-model-select",
@@ -148,9 +141,9 @@ def build_demo() -> gr.Blocks:
                 elem_classes=["provider-status"],
             )
             refresh_models_btn.click(
-                fn=workers.refresh_local_models,
-                inputs=[model_dd],
-                outputs=[model_dd],
+                fn=workers.refresh_models,
+                inputs=[model_dd, mlx_model_dd],
+                outputs=[model_dd, mlx_model_dd],
             )
 
             def update_model_controls(provider: str) -> tuple[Any, Any, Any, Any]:

@@ -9,6 +9,8 @@ from __future__ import annotations
 import io
 import logging
 import queue
+import shutil
+import subprocess
 import threading
 from collections.abc import Iterator
 from pathlib import Path
@@ -62,18 +64,64 @@ _analysis_lock = threading.Lock()
 
 
 def local_model_choices() -> tuple[list[str], str | None]:
-    """Return installed local models and the configured selection when available."""
+    """Return installed Ollama models and the configured selection when available."""
     settings = load_settings()
     models = list_ollama_models(settings.ollama_base_url, settings.ollama_timeout)
     default_model = settings.ollama_model if settings.ollama_model in models else None
     return models, default_model
 
 
+def mlx_model_choices() -> tuple[list[str], str | None]:
+    """Return MLX-LM models already stored in the local Hugging Face cache."""
+    manager = shutil.which("mlx_lm.manage")
+    if not manager:
+        pipx_manager = Path.home() / ".local" / "bin" / "mlx_lm.manage"
+        manager = str(pipx_manager) if pipx_manager.is_file() else None
+    if not manager:
+        return [], None
+
+    try:
+        result = subprocess.run(  # noqa: S603 - executable is resolved from PATH
+            [manager, "--scan"],
+            capture_output=True,
+            check=True,
+            text=True,
+            timeout=10,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        logger.warning("Could not scan the MLX-LM model cache: %s", exc)
+        return [], None
+
+    models: list[str] = []
+    for line in result.stdout.splitlines():
+        if not line.startswith("mlx-community/"):
+            continue
+        model = line.split(None, 1)[0]
+        if model not in models:
+            models.append(model)
+
+    settings = load_settings()
+    default_model = settings.mlx_model if settings.mlx_model in models else None
+    return models, default_model
+
+
 def refresh_local_models(current: str | None) -> Any:
-    """Refresh the model dropdown, preserving a still-installed selection."""
+    """Refresh the Ollama model dropdown, preserving a still-installed selection."""
     models, default_model = local_model_choices()
     selected = current if current in models else default_model
     return gr.update(choices=models, value=selected)
+
+
+def refresh_mlx_models(current: str | None) -> Any:
+    """Refresh the MLX-LM model dropdown from the local model cache."""
+    models, default_model = mlx_model_choices()
+    selected = current if current in models else default_model
+    return gr.update(choices=models, value=selected)
+
+
+def refresh_models(ollama_current: str | None, mlx_current: str | None) -> tuple[Any, Any]:
+    """Refresh both local-provider model dropdowns."""
+    return refresh_local_models(ollama_current), refresh_mlx_models(mlx_current)
 
 
 EMPTY_TABS = (

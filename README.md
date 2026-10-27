@@ -110,7 +110,14 @@ Then follow the instructions for your OS below.
    brew install pipx cmake
    pipx ensurepath
    pipx install mlx-lm
-   mlx_lm.server --model mlx-community/Qwen3-4B-4bit
+   mlx_lm.manage --scan
+   ```
+
+   Resume Crew lists only MLX-LM models found by `mlx_lm.manage --scan`; choose one in the
+   Analysis settings panel, then start the server with the selected model:
+
+   ```bash
+   mlx_lm.server --model <installed-model-id>
    ```
 
    Keep that server running on its default port (`8080`). Resume Crew connects to it through `MLX_BASE_URL`.
@@ -250,10 +257,10 @@ Activate the virtual environment for your OS (see [Installation](#installation))
 
 ### Full local analysis with MLX-LM (Apple Silicon)
 
-Start the MLX-LM server first:
+Start the MLX-LM server first with an installed model selected in the UI:
 
 ```bash
-mlx_lm.server --model mlx-community/Qwen3-4B-4bit
+mlx_lm.server --model <installed-model-id>
 ```
 
 Then run Resume Crew in another terminal:

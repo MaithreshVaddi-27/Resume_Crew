@@ -42,7 +42,7 @@ def build_llm(
     model: str | None = None,
     gemini_model: str | None = None,
 ) -> tuple[Any, str]:
-    """Pick Ollama or Gemini and return ``(llm_instance, provider_name)``.
+    """Pick MLX-LM, Ollama, or Gemini and return ``(llm_instance, provider_name)``.
 
     Reads resolved settings from :func:`config.load_settings` so provider
     selection, model names, and base URL come from one validated source.

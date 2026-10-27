@@ -38,7 +38,7 @@ Mounts `./output` so generated reports persist on the host. The mounted director
 ## Environment
 Copy `.env.example` to `.env` and set at minimum:
 - `LLM_PROVIDER=mlx` (recommended on Apple Silicon), `ollama`, or `gemini`
-- For MLX-LM, start `mlx_lm.server --model "$MLX_MODEL"` before launching Resume Crew.
+- For MLX-LM, run `mlx_lm.manage --scan`, choose an installed model, and start `mlx_lm.server --model "$MLX_MODEL"` before launching Resume Crew.
 - `GEMINI_API_KEY` (only if using Gemini)
 
 `.env` is gitignored — never commit it.
