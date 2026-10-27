@@ -28,12 +28,21 @@ from resume_crew.config import load_settings  # noqa: E402
 from resume_crew.document_reader import SUPPORTED_DOCUMENT_EXTENSIONS  # noqa: E402
 
 _SETTINGS = load_settings()
-PROVIDER_CHOICES = ["ollama", "gemini"]
+PROVIDER_CHOICES = ["mlx", "ollama", "gemini"]
 PRIVACY_NOTICE = (
-    "Ollama keeps analysis on this machine. Gemini sends extracted document text "
+    "Ollama and MLX keep analysis on this machine. Gemini sends extracted document text "
     "to Google. Choose the provider and model that fit this run."
 )
-_PROVIDER_LABELS = {"ollama": "Ollama (local)", "gemini": "Gemini (cloud)"}
+_PROVIDER_LABELS = {
+    "mlx": "MLX-LM (Apple Silicon)",
+    "ollama": "Ollama (local)",
+    "gemini": "Gemini (cloud)",
+}
+MLX_MODELS = [
+    ("Qwen3 4B · recommended", "mlx-community/Qwen3-4B-4bit"),
+    ("Llama 3.2 3B", "mlx-community/Llama-3.2-3B-Instruct-4bit"),
+    ("Mistral 7B", "mlx-community/Mistral-7B-Instruct-v0.3-4bit"),
+]
 GEMINI_MODELS = [
     ("Gemini 3.8 Flash · recommended", "gemini/gemini-3.8-flash"),
     ("Gemini 3.6 Flash", "gemini/gemini-3.6-flash"),
@@ -87,9 +96,22 @@ def build_demo() -> gr.Blocks:
                         else PROVIDER_CHOICES[0]
                     ),
                     label="Provider",
-                    info="Choose Ollama for local analysis or Gemini to use Google’s cloud model.",
+                    info="Choose MLX-LM or Ollama for local analysis, or Gemini for Google’s cloud model.",
                     scale=1,
                     elem_id="provider-select",
+                )
+                mlx_model_dd = gr.Dropdown(
+                    choices=MLX_MODELS,
+                    value=(
+                        _SETTINGS.mlx_model
+                        if _SETTINGS.mlx_model in dict(MLX_MODELS).values()
+                        else MLX_MODELS[0][1]
+                    ),
+                    label="MLX model",
+                    info="Choose a Hugging Face MLX model. It downloads on first use and runs locally.",
+                    scale=2,
+                    visible=_SETTINGS.provider == "mlx",
+                    elem_id="mlx-model-select",
                 )
                 model_dd = gr.Dropdown(
                     choices=LOCAL_MODELS,
@@ -122,7 +144,7 @@ def build_demo() -> gr.Blocks:
                 )
                 refresh_models_btn = gr.Button("Refresh models", scale=1, variant="secondary")
             provider_status = gr.Markdown(
-                f"Selected provider: {_PROVIDER_LABELS.get(_SETTINGS.provider, 'Ollama (local)')}",
+                f"Selected provider: {_PROVIDER_LABELS.get(_SETTINGS.provider, 'MLX-LM (Apple Silicon)')}",
                 elem_classes=["provider-status"],
             )
             refresh_models_btn.click(
@@ -131,8 +153,9 @@ def build_demo() -> gr.Blocks:
                 outputs=[model_dd],
             )
 
-            def update_model_controls(provider: str) -> tuple[Any, Any, Any]:
+            def update_model_controls(provider: str) -> tuple[Any, Any, Any, Any]:
                 return (
+                    gr.update(visible=provider == "mlx"),
                     gr.update(visible=provider == "ollama"),
                     gr.update(visible=provider == "gemini"),
                     gr.update(
@@ -143,12 +166,12 @@ def build_demo() -> gr.Blocks:
             provider_dd.change(
                 fn=update_model_controls,
                 inputs=[provider_dd],
-                outputs=[model_dd, gemini_model_dd, provider_status],
+                outputs=[mlx_model_dd, model_dd, gemini_model_dd, provider_status],
             )
             demo.load(
                 fn=update_model_controls,
                 inputs=[provider_dd],
-                outputs=[model_dd, gemini_model_dd, provider_status],
+                outputs=[mlx_model_dd, model_dd, gemini_model_dd, provider_status],
             )
 
         with gr.Tabs(elem_classes=["workflow-tabs"]):
@@ -161,7 +184,7 @@ def build_demo() -> gr.Blocks:
                     elem_classes=["section-intro"],
                 )
                 gr.Markdown(
-                    f"{PRIVACY_NOTICE} Choose Ollama to keep documents local.",
+                    f"{PRIVACY_NOTICE} Choose MLX-LM or Ollama to keep documents local.",
                     elem_classes=["privacy-note"],
                 )
                 with gr.Row(elem_classes=["document-row"]):
@@ -263,6 +286,7 @@ def build_demo() -> gr.Blocks:
                         resume_input,
                         jd_input,
                         provider_dd,
+                        mlx_model_dd,
                         model_dd,
                         gemini_model_dd,
                         cancel_event_state,
@@ -341,6 +365,7 @@ def build_demo() -> gr.Blocks:
                         build_notes_input,
                         build_jd_input,
                         provider_dd,
+                        mlx_model_dd,
                         model_dd,
                         gemini_model_dd,
                     ],
@@ -379,7 +404,14 @@ def build_demo() -> gr.Blocks:
 
                 rank_btn.click(
                     fn=workers.rank_resumes_fn,
-                    inputs=[dir_input, rank_jd_input, provider_dd, model_dd, gemini_model_dd],
+                    inputs=[
+                        dir_input,
+                        rank_jd_input,
+                        provider_dd,
+                        mlx_model_dd,
+                        model_dd,
+                        gemini_model_dd,
+                    ],
                     outputs=rank_out,
                 )
 
@@ -418,6 +450,7 @@ def build_demo() -> gr.Blocks:
                         batch_dir_input,
                         batch_jd_input,
                         provider_dd,
+                        mlx_model_dd,
                         model_dd,
                         gemini_model_dd,
                     ],
@@ -461,6 +494,7 @@ def build_demo() -> gr.Blocks:
                         compare_resume_input,
                         compare_jd_inputs,
                         provider_dd,
+                        mlx_model_dd,
                         model_dd,
                         gemini_model_dd,
                     ],

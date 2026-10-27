@@ -35,7 +35,7 @@ Resume Crew is a Python package. Public surface below.
 ## `resume_crew.pipeline`
 
 `build_llm(provider: str | None = None) -> tuple[LLM, str]`
-: Select Ollama or Gemini based on settings/provider availability.
+: Select MLX-LM, Ollama, or Gemini based on the configured provider.
 
 `run_llm_analysis(resume_text, job_description_text, llm, on_step=None) -> tuple[str, str, str, str]`
 : Run the 4-stage agent pipeline (resume profile, job profile, gap analysis, writer output).

@@ -38,7 +38,7 @@ All notable changes to Resume Crew are documented here.
 - Report input size limits and atomic write to prevent partial/corrupted history entries.
 
 ### Changed
-- Provider selection is explicit: choose Ollama or Gemini, then choose that provider's model; automatic provider fallback has been removed.
+- Provider selection is explicit: choose MLX-LM, Ollama, or Gemini, then choose that provider's model; automatic provider fallback has been removed.
 - Primary action button inverted to light-on-dark for stronger affordance.
 - CSS palette shifted to slightly warmer neutrals; font extracted to `--font-ui` variable.
 - Footer uses semantic `<footer>` element styled via CSS rule rather than inline override.

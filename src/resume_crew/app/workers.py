@@ -132,6 +132,7 @@ def _run_analysis_thread(
     resume_path: str,
     job_path: str,
     provider: str,
+    mlx_model: str,
     model: str,
     gemini_model: str,
     step_q: queue.Queue[str | None],
@@ -151,7 +152,9 @@ def _run_analysis_thread(
         job_title = first_meaningful_line(job_text, "Target Role")
 
         step_q.put(f"🤖 Connecting to {provider.title()} LLM...")
-        llm, resolved_provider = build_llm(provider, model, gemini_model)
+        llm, resolved_provider = build_llm(
+            provider, mlx_model if provider == "mlx" else model, gemini_model
+        )
         step_q.put(f"✅ Connected via {resolved_provider.title()}. Starting 4-step analysis...")
 
         def on_step(msg: str) -> None:
@@ -215,6 +218,7 @@ def analyze_stream(
     resume_file: Any,
     jd_file: Any,
     provider: str,
+    mlx_model: str = "",
     model: str = "",
     gemini_model: str = "",
     cancel_event_state: Any = None,
@@ -248,6 +252,7 @@ def analyze_stream(
             resume_path,
             jd_path,
             provider,
+            mlx_model or "",
             model or "",
             gemini_model or "",
             step_q,
@@ -360,6 +365,7 @@ def rank_resumes_fn(
     directory_path: str,
     jd_file: Any,
     provider: str,
+    mlx_model: str = "",
     model: str = "",
     gemini_model: str = "",
 ) -> Iterator[Any]:
@@ -384,7 +390,9 @@ def rank_resumes_fn(
             yield "No supported resume files found in that directory."
             return
 
-        llm, resolved_provider = build_llm(provider, model, gemini_model)
+        llm, resolved_provider = build_llm(
+            provider, mlx_model if provider == "mlx" else model, gemini_model
+        )
 
         yield f"🤖 Connecting to {resolved_provider.title()} LLM..."
 
@@ -409,6 +417,7 @@ def batch_analyze_fn(
     directory_path: str,
     jd_file: Any,
     provider: str,
+    mlx_model: str = "",
     model: str = "",
     gemini_model: str = "",
 ) -> Iterator[Any]:
@@ -433,7 +442,9 @@ def batch_analyze_fn(
             yield "No supported resume files found in that directory."
             return
 
-        llm, resolved_provider = build_llm(provider, model, gemini_model)
+        llm, resolved_provider = build_llm(
+            provider, mlx_model if provider == "mlx" else model, gemini_model
+        )
         job_title = first_meaningful_line(job_text, "Target Role")
 
         results: list[tuple[str, float | None, str]] = []
@@ -492,6 +503,7 @@ def compare_jds_fn(
     resume_file: Any,
     jd_files: list[Any],
     provider: str,
+    mlx_model: str = "",
     model: str = "",
     gemini_model: str = "",
 ) -> Iterator[Any]:
@@ -507,7 +519,9 @@ def compare_jds_fn(
     try:
         resume_text = extract_text(resume_path)
 
-        llm, resolved_provider = build_llm(provider, model, gemini_model)
+        llm, resolved_provider = build_llm(
+            provider, mlx_model if provider == "mlx" else model, gemini_model
+        )
 
         yield f"🤖 Connecting to {resolved_provider.title()} LLM..."
 
@@ -550,6 +564,7 @@ def build_resume_fn(
     notes_text: str,
     jd_file: Any,
     provider: str,
+    mlx_model: str = "",
     model: str = "",
     gemini_model: str = "",
 ) -> Iterator[tuple[str, str, str, str | None, str | None]]:
@@ -597,7 +612,9 @@ def build_resume_fn(
         )
 
         yield f"🤖 Connecting to {provider.title()} LLM...", "", "", None, None
-        llm, resolved_provider = build_llm(provider, model, gemini_model)
+        llm, resolved_provider = build_llm(
+            provider, mlx_model if provider == "mlx" else model, gemini_model
+        )
         yield (
             f"✅ Connected via {resolved_provider.title()}. Drafting tailored resume...",
             "",

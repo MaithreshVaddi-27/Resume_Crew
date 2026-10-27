@@ -27,10 +27,11 @@ MAX_EXTRACTED_CHARACTERS = 100_000
 
 # Default LLM models.
 DEFAULT_OLLAMA_MODEL = "gemma3:4b"
+DEFAULT_MLX_MODEL = "mlx-community/Qwen3-4B-4bit"
 DEFAULT_GEMINI_MODEL = "gemini/gemini-3.8-flash"
 
 # Valid providers / hardware profiles.
-VALID_PROVIDERS = ("ollama", "gemini")
+VALID_PROVIDERS = ("ollama", "mlx", "gemini")
 VALID_OLLAMA_PROFILES = ("auto", "cuda", "mps", "cpu")
 
 
@@ -41,6 +42,8 @@ class Settings:
     provider: str
     ollama_base_url: str
     ollama_model: str
+    mlx_model: str
+    mlx_base_url: str
     ollama_timeout: float
     ollama_profile: str
     gemini_api_key: str | None
@@ -62,7 +65,7 @@ class Settings:
         def _get(name: str, default: str = "") -> str:
             return os.getenv(name, default)
 
-        provider = _get("LLM_PROVIDER", "ollama").strip().lower()
+        provider = _get("LLM_PROVIDER", "mlx").strip().lower()
         if provider not in VALID_PROVIDERS:
             raise ValueError(f"LLM_PROVIDER must be one of {VALID_PROVIDERS}, got {provider!r}")
 
@@ -95,6 +98,8 @@ class Settings:
             provider=provider,
             ollama_base_url=_get("OLLAMA_BASE_URL", "http://localhost:11434"),
             ollama_model=_get("OLLAMA_MODEL", DEFAULT_OLLAMA_MODEL),
+            mlx_model=_get("MLX_MODEL", DEFAULT_MLX_MODEL),
+            mlx_base_url=_get("MLX_BASE_URL", "http://localhost:8080/v1"),
             ollama_timeout=ollama_timeout,
             ollama_profile=ollama_profile,
             gemini_api_key=gemini_api_key,

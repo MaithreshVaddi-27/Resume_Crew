@@ -3,9 +3,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![UI: Gradio](https://img.shields.io/badge/UI-Gradio-orange.svg)](https://www.gradio.app/)
-[![LLM: Ollama%20%7C%20Gemini](https://img.shields.io/badge/LLM-Ollama%20%7C%20Gemini-8A2BE2.svg)](#requirements)
+[![LLM: MLX%20%7C%20Ollama%20%7C%20Gemini](https://img.shields.io/badge/LLM-MLX%20%7C%20Ollama%20%7C%20Gemini-8A2BE2.svg)](#requirements)
 
-**Resume Crew** compares a resume against a job description and produces an evidence-focused match report — no invented skills, no guessed experience. Choose Ollama for local analysis or Gemini when you are comfortable sending extracted document text to Google.
+**Resume Crew** compares a resume against a job description and produces an evidence-focused match report — no invented skills, no guessed experience. Choose MLX-LM or Ollama for local analysis, or Gemini when you are comfortable sending extracted document text to Google.
 
 **Maintainer:** Maithresh Vaddi
 
@@ -62,14 +62,15 @@ The deterministic keyword score is a **whole-term overlap signal**, not an ATS s
 
 - Python 3.10 or newer
 - One LLM provider for full analysis:
-  - **Ollama** (recommended) — runs locally, keeps data on your machine, no API key needed
+  - **MLX-LM** (recommended on Apple Silicon) — runs locally through its OpenAI-compatible server
+  - **Ollama** — runs locally, keeps data on your machine, no API key needed
   - **Gemini** (optional) — cloud analysis; needs an API key and sends document text to Google
 
 Hardware diagnostics (`--check-hardware`) work with no LLM provider configured. Resume ranking uses the LLM too, so it needs a working provider just like full analysis does.
 
 ## Getting an API key (optional — only for Gemini)
 
-You only need this if you want to use `--provider gemini`. If you are staying fully local with Ollama, skip this section.
+You only need this if you want to use `--provider gemini`. If you are using MLX-LM or Ollama locally, skip this section.
 
 1. Go to **[Google AI Studio → API Keys](https://aistudio.google.com/app/apikey)** and sign in with a Google account.
 2. Click **Create API key**, and select or create a Google Cloud project when prompted (no billing account required for the free tier).
@@ -103,7 +104,18 @@ Then follow the instructions for your OS below.
    pip install .
    ```
 
-3. For local (no API key) analysis, install [Ollama](https://ollama.com/download), open it once, then run:
+3. For local analysis on Apple Silicon, install Homebrew if needed, then install pipx and MLX-LM:
+
+   ```bash
+   brew install pipx cmake
+   pipx ensurepath
+   pipx install mlx-lm
+   mlx_lm.server --model mlx-community/Qwen3-4B-4bit
+   ```
+
+   Keep that server running on its default port (`8080`). Resume Crew connects to it through `MLX_BASE_URL`.
+
+4. Alternatively, install [Ollama](https://ollama.com/download), open it once, then run:
 
    ```bash
    ollama pull gemma3:4b
@@ -195,8 +207,12 @@ Then open `.env` and set the values you need. The most relevant settings:
 RESUME_PATH=./samples/Resumes/sample_resume.pdf
 JD_PATH=./samples/Job_description/sample_job_description.pdf
 
-# Choose exactly one provider for each run: ollama or gemini.
-LLM_PROVIDER=ollama
+# Choose exactly one provider for each run: mlx, ollama, or gemini.
+LLM_PROVIDER=mlx
+
+# MLX-LM OpenAI-compatible server
+MLX_BASE_URL=http://localhost:8080/v1
+MLX_MODEL=mlx-community/Qwen3-4B-4bit
 
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=gemma3:4b
@@ -232,7 +248,24 @@ GRADIO_AUTH_PASS=replace_with_a_strong_password
 
 Activate the virtual environment for your OS (see [Installation](#installation)) before each session, then run commands from the project root.
 
-### Full local analysis (Ollama, no API key)
+### Full local analysis with MLX-LM (Apple Silicon)
+
+Start the MLX-LM server first:
+
+```bash
+mlx_lm.server --model mlx-community/Qwen3-4B-4bit
+```
+
+Then run Resume Crew in another terminal:
+
+```bash
+resume-crew \
+  --resume samples/Resumes/sample_resume.pdf \
+  --job-description samples/Job_description/sample_job_description.pdf \
+  --provider mlx
+```
+
+### Full local analysis with Ollama (no API key)
 
 **macOS / Linux:**
 
@@ -340,6 +373,7 @@ CrewAI execution traces and telemetry are disabled by default, both in `.env.exa
 
 ## Privacy and data retention
 
+- With `--provider mlx`, resume and job text stay on the local machine, subject to your MLX-LM server.
 - With `--provider ollama`, resume and job text stay on the local machine, subject to your local Ollama installation.
 - With `--provider gemini`, source text is sent to Google — use it only when that's acceptable.
 - Reports are created in `output/` and can contain personal information. That folder is ignored by Git.
@@ -371,7 +405,7 @@ python -m compileall -q src
 python -m pip check
 ```
 
-The test suite covers document validation, keyword scoring (including single-char tokens like `R`), report structure, CRLF handling, output safety, timestamp format, and hardware-setting validation. A live LLM run requires an available Ollama server or valid Gemini credentials.
+The test suite covers document validation, keyword scoring (including single-character tokens like `R`), report structure, CRLF handling, output safety, timestamp format, and hardware-setting validation. A live LLM run requires a running MLX-LM or Ollama server, or valid Gemini credentials.
 
 ## Disclaimer
 

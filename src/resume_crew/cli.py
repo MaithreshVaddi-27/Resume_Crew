@@ -123,8 +123,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--provider",
-        choices=("ollama", "gemini"),
-        default=os.getenv("LLM_PROVIDER", "ollama"),
+        choices=("mlx", "ollama", "gemini"),
+        default=os.getenv("LLM_PROVIDER", "mlx"),
     )
     parser.add_argument(
         "--output",

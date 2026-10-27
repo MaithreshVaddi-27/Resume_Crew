@@ -51,8 +51,8 @@ def build_llm(
     settings.apply_telemetry_env()
 
     provider = provider or settings.provider
-    if provider not in {"ollama", "gemini"}:
-        raise ValueError("LLM provider must be ollama or gemini.")
+    if provider not in {"ollama", "mlx", "gemini"}:
+        raise ValueError("LLM provider must be ollama, mlx, or gemini.")
 
     # CrewAI is intentionally loaded only for a real LLM request. Importing it
     # initializes its optional local storage, which diagnostics and report
@@ -61,6 +61,7 @@ def build_llm(
 
     base_url = settings.ollama_base_url
     ollama_model = model or settings.ollama_model
+    mlx_model = model or settings.mlx_model
     gemini_model = gemini_model or settings.gemini_model
     if gemini_model.startswith("gemini/"):
         gemini_model = gemini_model.removeprefix("gemini/")
@@ -77,6 +78,13 @@ def build_llm(
             if model not in list_ollama_models(base_url, settings.ollama_timeout):
                 raise ValueError(f"Ollama model {model!r} is not installed locally.")
         return LLM(model=f"ollama/{ollama_model}", base_url=base_url), "ollama"
+
+    if provider == "mlx":
+        return LLM(
+            model=f"openai/{mlx_model}",
+            base_url=settings.mlx_base_url,
+            api_key="mlx-local",
+        ), "mlx"
 
     if not gemini_key:
         raise ValueError("Gemini requires GEMINI_API_KEY. Add it to .env before selecting Gemini.")
