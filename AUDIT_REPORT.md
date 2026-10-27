@@ -1,4 +1,4 @@
-# Resume_Crew — Engineering Audit
+# Resume Crew — Engineering Audit
 
 **Original audit date:** 2026-10-24
 **Follow-up status:** Includes verified local follow-up changes after `bb831c4`; not all changes are committed.
@@ -73,7 +73,7 @@ Estimated complexity reduction: **15–25 lines; 0 dependencies**. Findings are 
 
 1. **P1 — Repeated Analyze clicks can start duplicate concurrent runs.** The Analyze action stays available while `analyze_stream()` starts a daemon worker, so multiple expensive LLM pipelines can update the same result components and publish separate reports. Disable the initiating action while running and restore it on every terminal yield. `src/resume_crew/app/main.py:168-179,247-263`; `src/resume_crew/app/workers.py:216-234`.
 
-2. **P1 — Folder workflows depend on the server filesystem.** Rank and Batch Analyze accept a path in a browser textbox; a remote user’s local path is not the machine running Resume_Crew. Make the UI explicitly say “folder on the machine running Resume_Crew,” or replace the path input with uploaded files. `src/resume_crew/app/main.py:350-359,385-393`; `src/resume_crew/app/workers.py:350-355,399-404`.
+2. **P1 — Folder workflows depend on the server filesystem.** Rank and Batch Analyze accept a path in a browser textbox; a remote user’s local path is not the machine running Resume Crew. Make the UI explicitly say “folder on the machine running Resume Crew,” or replace the path input with uploaded files. `src/resume_crew/app/main.py:350-359,385-393`; `src/resume_crew/app/workers.py:350-355,399-404`.
 
 3. **P1 — Cancel is cooperative, not immediate.** Cancellation cannot interrupt an in-flight provider call or retry sleep. A final checkpoint was added before report publication, preventing a cancel received during report assembly from publishing a run, but the UI should continue to describe cancellation as stopping after the current step. `src/resume_crew/app/workers.py:144-170,320-324`.
 
@@ -115,7 +115,7 @@ Estimated complexity reduction: **15–25 lines; 0 dependencies**. Findings are 
 
 - **Duplicate Analyze guard:** Added a single non-blocking process-local lock around the full Analyze workflow. A second request now returns a clear message instead of launching another LLM thread; the lock is released from the worker's `finally` path. `src/resume_crew/app/workers.py:56-58,194-202,224-230`.
 - **Cancellation publication race:** Kept the final cancellation checkpoint immediately before report publication so a cancellation during report assembly does not create a saved run. `src/resume_crew/app/workers.py:173-175`.
-- **Folder-path clarity:** Rank and Batch Analyze now state that paths are resolved on the machine running Resume_Crew, which avoids misleading remote-browser expectations without replacing the established local workflow. `src/resume_crew/app/main.py:350-356,385-393`.
+- **Folder-path clarity:** Rank and Batch Analyze now state that paths are resolved on the machine running Resume Crew, which avoids misleading remote-browser expectations without replacing the established local workflow. `src/resume_crew/app/main.py:350-356,385-393`.
 - **Mobile settings layout:** Settings controls now occupy separate full-width rows below 640px, preventing the provider/model/refresh toolbar from overflowing narrow screens. `src/resume_crew/app/styles.css:239-247`.
 
 ### Remaining

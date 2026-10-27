@@ -1,6 +1,6 @@
 # Architecture
 
-Resume_Crew is a small, local-first Python package with two installed console commands—`resume-crew` and `resume-crew-ui`—sharing a common analysis core.
+Resume Crew is a small, local-first Python package with two installed console commands—`resume-crew` and `resume-crew-ui`—sharing a common analysis core.
 
 ## Components
 

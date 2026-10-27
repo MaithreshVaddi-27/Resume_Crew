@@ -1,1 +1,1 @@
-"""Gradio web UI package for Resume_Crew."""
+"""Gradio web UI package for Resume Crew."""

@@ -1,4 +1,4 @@
-"""Gradio web interface for Resume_Crew with optional ngrok live sharing.
+"""Gradio web interface for Resume Crew with optional ngrok live sharing.
 
 Layout and event wiring only. All long-running analysis logic lives in
 :mod:`resume_crew.app.workers`.
@@ -61,7 +61,7 @@ else:
 
 def build_demo() -> gr.Blocks:
     with gr.Blocks(
-        title="Resume_Crew",
+        title="Resume Crew",
         analytics_enabled=False,
         **_BLOCKS_STYLE_KWARGS,
     ) as demo:
@@ -356,8 +356,8 @@ def build_demo() -> gr.Blocks:
                     with gr.Column(scale=2):
                         dir_input = gr.Textbox(
                             label="Folder containing resumes",
-                            placeholder="Folder on the machine running Resume_Crew, e.g. ./samples/Resumes",
-                            info="This path is resolved on the machine running Resume_Crew, not your browser device.",
+                            placeholder="Folder on the machine running Resume Crew, e.g. ./samples/Resumes",
+                            info="This path is resolved on the machine running Resume Crew, not your browser device.",
                             elem_id="dir-input",
                         )
                     with gr.Column(scale=1):
@@ -392,8 +392,8 @@ def build_demo() -> gr.Blocks:
                     with gr.Column(scale=2):
                         batch_dir_input = gr.Textbox(
                             label="Folder containing resumes",
-                            placeholder="Folder on the machine running Resume_Crew, e.g. ./samples/Resumes",
-                            info="This path is resolved on the machine running Resume_Crew, not your browser device.",
+                            placeholder="Folder on the machine running Resume Crew, e.g. ./samples/Resumes",
+                            info="This path is resolved on the machine running Resume Crew, not your browser device.",
                         )
                     with gr.Column(scale=1):
                         batch_jd_input = gr.File(
@@ -574,7 +574,7 @@ def build_demo() -> gr.Blocks:
         # ── Footer ─────────────────────────────────────────────────────────────
         gr.HTML("""
         <footer id="app-footer" style="text-align:center;padding:20px 0 8px;">
-            Resume_Crew v1.4.0 — grounded, local-first AI analysis.
+            Resume Crew v1.4.0 — grounded, local-first AI analysis.
             Keyword scores are not ATS simulations or hiring recommendations.
         </footer>
         """)
@@ -605,7 +605,7 @@ def main() -> None:
     # never points at a port that is still starting.
     token = settings.ngrok_authtoken
     demo = build_demo()
-    print(f"\nResume_Crew is ready at http://localhost:{port}")
+    print(f"\nResume Crew is ready at http://localhost:{port}")
 
     if token:
         demo.launch(

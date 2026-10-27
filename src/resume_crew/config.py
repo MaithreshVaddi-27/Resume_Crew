@@ -1,4 +1,4 @@
-"""Centralized configuration for Resume_Crew.
+"""Centralized configuration for Resume Crew.
 
 Loads environment variables from .env (via python-dotenv, called by entry
 points) and exposes typed, validated settings so that every module reads from
@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 # Resolve the project root as the directory containing this file's parent
-# package (src/resume_crew/config.py -> Resume_Crew/).
+# package (src/resume_crew/config.py -> project root).
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = PROJECT_ROOT / "src"
 OUTPUT_ROOT = PROJECT_ROOT / "output"

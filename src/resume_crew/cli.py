@@ -1,4 +1,4 @@
-"""Command-line interface for Resume_Crew."""
+"""Command-line interface for Resume Crew."""
 
 from __future__ import annotations
 
@@ -102,12 +102,12 @@ def _run_analysis(args: argparse.Namespace) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Resume_Crew — grounded, local-first resume analysis",
+        description="Resume Crew — grounded, local-first resume analysis",
     )
     parser.add_argument(
         "--version",
         action="version",
-        version=f"Resume_Crew {__version__}",
+        version=f"Resume Crew {__version__}",
     )
     parser.add_argument(
         "--resume",

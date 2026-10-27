@@ -1,6 +1,6 @@
 # Prompting — CRAFT Framework
 
-All agent instructions in Resume_Crew live as versioned Markdown templates in `src/resume_crew/prompts/` and are rendered at runtime via `_render_prompt()` in `pipeline.py`. They are **not** inline in Python.
+All agent instructions in Resume Crew live as versioned Markdown templates in `src/resume_crew/prompts/` and are rendered at runtime via `_render_prompt()` in `pipeline.py`. They are **not** inline in Python.
 
 ## CRAFT structure
 

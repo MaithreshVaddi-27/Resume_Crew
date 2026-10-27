@@ -1,11 +1,11 @@
-# Resume_Crew
+# Resume Crew
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![UI: Gradio](https://img.shields.io/badge/UI-Gradio-orange.svg)](https://www.gradio.app/)
 [![LLM: Ollama%20%7C%20Gemini](https://img.shields.io/badge/LLM-Ollama%20%7C%20Gemini-8A2BE2.svg)](#requirements)
 
-**Resume_Crew** compares a resume against a job description and produces an evidence-focused match report — no invented skills, no guessed experience. It runs entirely on your machine by default (via [Ollama](https://ollama.com)), with an optional cloud fallback to Google Gemini.
+**Resume Crew** compares a resume against a job description and produces an evidence-focused match report — no invented skills, no guessed experience. It runs entirely on your machine by default (via [Ollama](https://ollama.com)), with an optional cloud fallback to Google Gemini.
 
 It ships two ways to use it:
 
@@ -296,7 +296,7 @@ The UI opens automatically at `http://localhost:7860` and includes:
 
 ### Authenticated public sharing
 
-Public tunnels expose the app to anyone who can reach the URL. Resume files, notes, and generated reports may contain sensitive personal information. Resume_Crew therefore refuses to start ngrok or Gradio sharing unless both credentials are set.
+Public tunnels expose the app to anyone who can reach the URL. Resume files, notes, and generated reports may contain sensitive personal information. Resume Crew therefore refuses to start ngrok or Gradio sharing unless both credentials are set.
 
 1. For ngrok, get an authtoken at [dashboard.ngrok.com](https://dashboard.ngrok.com/get-started/your-authtoken).
 2. Add the tunnel option and credentials to `.env`:
@@ -321,7 +321,7 @@ GRADIO_SHARE=false      # Public Gradio tunnel (requires both auth values)
 ## Project layout
 
 ```text
-Resume_Crew/
+Resume Crew/
 ├── src/resume_crew/          # Application package and console entry points
 ├── tests/                    # Automated tests
 ├── samples/                  # Versioned demonstration documents
@@ -357,7 +357,7 @@ CrewAI execution traces and telemetry are disabled by default, both in `.env.exa
 | Slow local analysis | Run `resume-crew --check-hardware`; reduce Ollama context or use a smaller local model. |
 | ngrok tunnel not created | Ensure `pyngrok` is installed (`pip install pyngrok`) and `NGROK_AUTHTOKEN` is set in `.env`. |
 | Gradio port already in use | Set `GRADIO_PORT=7861` (or any free port) in `.env`. |
-| `resume-crew-ui` fails with `DLL load failed... Application Control policy has blocked this file` (Windows) | A managed/corporate Windows security policy (WDAC/AppLocker) is blocking a native DLL — usually pandas, pulled in by Gradio — often because the project folder still has the "downloaded from the internet" flag. In PowerShell from the project root: `Get-ChildItem -Path .\venv -Recurse \| Unblock-File`, then retry. If it still fails, move the project out of `Downloads` to a plain local folder (e.g. `C:\Resume_Crew`), delete `venv`, and reinstall. On a company-managed device the policy may be enforced centrally — ask IT to allow Python/pandas, or run the project inside WSL2 instead. |
+| `resume-crew-ui` fails with `DLL load failed... Application Control policy has blocked this file` (Windows) | A managed/corporate Windows security policy (WDAC/AppLocker) is blocking a native DLL — usually pandas, pulled in by Gradio — often because the project folder still has the "downloaded from the internet" flag. In PowerShell from the project root: `Get-ChildItem -Path .\venv -Recurse \| Unblock-File`, then retry. If it still fails, move the project out of `Downloads` to a plain local folder (e.g. `C:\Resume Crew`), delete `venv`, and reinstall. On a company-managed device the policy may be enforced centrally — ask IT to allow Python/pandas, or run the project inside WSL2 instead. |
 
 ## Development and verification
 

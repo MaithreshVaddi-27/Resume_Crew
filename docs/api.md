@@ -1,6 +1,6 @@
 # API Reference
 
-Resume_Crew is a Python package. Public surface below.
+Resume Crew is a Python package. Public surface below.
 
 ## `resume_crew.config`
 

@@ -1,4 +1,4 @@
-"""Versioned prompt store for Resume_Crew agents.
+"""Versioned prompt store for Resume Crew agents.
 
 Each prompt follows the CRAFT framework:
 

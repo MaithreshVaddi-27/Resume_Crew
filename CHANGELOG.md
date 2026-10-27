@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Resume_Crew are documented here.
+All notable changes to Resume Crew are documented here.
 
 ## [1.4.0] — 2026-10-23
 ### Added

@@ -1,4 +1,4 @@
-# Resume_Crew — development shortcuts
+# Resume Crew — development shortcuts
 #
 #   make setup     create venv + install deps
 #   make test      run the test suite

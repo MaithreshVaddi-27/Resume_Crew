@@ -1,3 +1,3 @@
-"""Resume_Crew: grounded, local-first resume and job analysis."""
+"""Resume Crew: grounded, local-first resume and job analysis."""
 
 __version__ = "1.4.0"

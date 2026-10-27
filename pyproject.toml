@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "resume-crew"
 version = "1.4.0"
-description = "Resume_Crew — grounded, local-first resume-to-job-description analysis"
+description = "Resume Crew — grounded, local-first resume-to-job-description analysis"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [

@@ -1,7 +1,7 @@
 """Background workers and analysis functions for the Gradio UI.
 
-Extracted from the monolithic ``app.py`` so the UI layout stays thin and the
-long-running LLM pipeline logic lives in one place.
+Keeps the UI layout thin while centralizing
+long-running LLM pipeline logic in one place.
 """
 
 from __future__ import annotations
@@ -377,7 +377,7 @@ def rank_resumes_fn(
         job_text = extract_text(jd_path)
         source = Path(directory_path.strip()).expanduser().resolve()
         if not source.is_dir():
-            yield "❌ The selected folder is not available on the machine running Resume_Crew."
+            yield "❌ The selected folder is not available on the machine running Resume Crew."
             return
 
         paths = _list_resume_files(source)
@@ -426,7 +426,7 @@ def batch_analyze_fn(
         job_text = extract_text(jd_path)
         source = Path(directory_path.strip()).expanduser().resolve()
         if not source.is_dir():
-            yield "❌ The selected folder is not available on the machine running Resume_Crew."
+            yield "❌ The selected folder is not available on the machine running Resume Crew."
             return
 
         paths = _list_resume_files(source)

@@ -1,4 +1,4 @@
-# Contributing to Resume_Crew
+# Contributing to Resume Crew
 
 Thanks for contributing! Please follow these guidelines.
 

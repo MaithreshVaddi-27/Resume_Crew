@@ -1,4 +1,4 @@
-"""CrewAI orchestration and Markdown report assembly for resume matching.
+"""CrewAI orchestration and Markdown report assembly for Resume Crew.
 
 Agent prompts are versioned CRAFT templates loaded from
 ``src/resume_crew/prompts/*.md`` so they can be edited, A/B tested, and
