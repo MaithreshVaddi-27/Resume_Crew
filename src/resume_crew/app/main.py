@@ -10,7 +10,7 @@ import os
 import signal
 import threading
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 from dotenv import load_dotenv
 
@@ -80,7 +80,7 @@ else:
     _BLOCKS_STYLE_KWARGS = {"theme": gr.themes.Base(), "css": _CUSTOM_CSS}
 
 
-def build_demo() -> gr.Blocks:
+def build_demo() -> Any:  # gr.Blocks type varies by gradio version
     with gr.Blocks(
         title="Resume Crew",
         analytics_enabled=False,
@@ -627,7 +627,7 @@ def build_demo() -> gr.Blocks:
         </footer>
         """)
 
-    return cast(gr.Blocks, demo)
+    return demo
 
 
 # ---------------------------------------------------------------------------
