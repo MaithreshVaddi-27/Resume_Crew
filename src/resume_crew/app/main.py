@@ -654,7 +654,7 @@ def main() -> None:
             from pyngrok import conf, ngrok  # noqa: PLC0415
 
             conf.get_default().auth_token = token
-            tunnel = ngrok.connect(port, "http")
+            tunnel = ngrok.connect(str(port), "http")
             print(f"\n{'=' * 60}")
             print(f"  🌐  Live ngrok URL: {tunnel.public_url}")
             print(f"{'=' * 60}\n")
