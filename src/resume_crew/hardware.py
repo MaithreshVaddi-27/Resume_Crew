@@ -55,8 +55,8 @@ def _system_memory_gb() -> float | None:
     system = platform.system()
     try:
         if system == "Darwin":
-            output = subprocess.run(
-                ["sysctl", "-n", "hw.memsize"],  # noqa: S603, S607
+            output = subprocess.run(  # noqa: S603
+                ["sysctl", "-n", "hw.memsize"],  # noqa: S607
                 capture_output=True,
                 text=True,
                 timeout=5,
@@ -94,8 +94,8 @@ def detect_compute_device() -> dict[str, Any]:
     }
 
     try:
-        result = subprocess.run(
-            ["nvidia-smi", "--query-gpu=name,memory.total", "--format=csv,noheader,nounits"],  # noqa: S603, S607
+        result = subprocess.run(  # noqa: S603
+            ["nvidia-smi", "--query-gpu=name,memory.total", "--format=csv,noheader,nounits"],  # noqa: S607
             capture_output=True,
             text=True,
             timeout=5,
