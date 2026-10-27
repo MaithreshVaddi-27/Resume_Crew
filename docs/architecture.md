@@ -1,6 +1,6 @@
 # Architecture
 
-Resume_Crew is a small, local-first Python package with two entry points (CLI and Gradio UI) sharing a common analysis core.
+Resume_Crew is a small, local-first Python package with two installed console commands—`resume-crew` and `resume-crew-ui`—sharing a common analysis core.
 
 ## Components
 
@@ -23,7 +23,7 @@ Resume_Crew is a small, local-first Python package with two entry points (CLI an
    - Job Requirements Analyst → factual job profile.
    - Resume Match Analyst → gap analysis (strong matches / evidence gaps / interview risks).
    - Grounded Resume Writer → tailored bullets + interview prep.
-4. Report files assembled and written under `output/<slug>` (`pipeline.build_report_files`, `storage.create_run_directory`).
+4. Report files are staged and atomically published under `output/<slug>` (`pipeline.build_report_files`, `storage.write_run_files`). The UI reports only that the report was saved locally; absolute filesystem paths stay server-side.
 5. Optional PDF/DOCX export (`pipeline.markdown_to_pdf` / `markdown_to_docx`).
 
 ## Grounding constraint

@@ -20,7 +20,6 @@ COPY src ./src
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir .
 
-COPY app.py ./
 COPY samples ./samples
 
 # CrewAI telemetry stays off for privacy.
@@ -33,4 +32,4 @@ ENV CREWAI_TRACING_ENABLED=false \
 
 EXPOSE 7860
 
-CMD ["python", "app.py"]
+CMD ["resume-crew-ui"]

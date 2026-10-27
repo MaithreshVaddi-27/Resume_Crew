@@ -96,7 +96,8 @@ def _run_analysis(args: argparse.Namespace) -> None:
         score=score.score,
     )
 
-    print(f"Analysis complete. Report saved to: {directory}")
+    report_path = Path(os.path.relpath(directory, Path.cwd()))
+    print(f"Analysis complete. Report saved to: {report_path}")
 
 
 def build_parser() -> argparse.ArgumentParser:

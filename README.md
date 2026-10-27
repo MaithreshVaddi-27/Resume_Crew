@@ -9,8 +9,8 @@
 
 It ships two ways to use it:
 
-- **CLI** (`main.py`) — scriptable, good for batch/automation work
-- **Gradio web UI** (`app.py`) — point-and-click, with optional public sharing via ngrok
+- **CLI** (`resume-crew`) — scriptable, good for batch/automation work
+- **Gradio web UI** (`resume-crew-ui`) — point-and-click, with optional public sharing via ngrok
 
 Supports **PDF, DOCX, TXT, and Markdown** inputs.
 
@@ -110,7 +110,7 @@ Then follow the instructions for your OS below.
 Apple Silicon (M1/M2/M3/M4) is detected automatically. Check the recommended profile with:
 
 ```bash
-python main.py --check-hardware
+resume-crew --check-hardware
 ```
 
 ### Windows (PowerShell)
@@ -140,7 +140,7 @@ python main.py --check-hardware
 Check hardware detection with:
 
 ```powershell
-py main.py --check-hardware
+.\venv\Scripts\resume-crew.exe --check-hardware
 ```
 
 ### Linux
@@ -170,7 +170,7 @@ ollama pull gemma3:4b
 For NVIDIA systems, confirm the driver and `nvidia-smi` work **before** starting Ollama, so GPU acceleration is detected correctly. Check with:
 
 ```bash
-python main.py --check-hardware
+resume-crew --check-hardware
 ```
 
 ## Configuration
@@ -235,7 +235,7 @@ Activate the virtual environment for your OS (see [Installation](#installation))
 **macOS / Linux:**
 
 ```bash
-python main.py \
+resume-crew \
   --resume samples/Resumes/sample_resume.pdf \
   --job-description samples/Job_description/sample_job_description.pdf \
   --provider ollama
@@ -244,7 +244,7 @@ python main.py \
 **Windows PowerShell:**
 
 ```powershell
-python main.py `
+resume-crew `
   --resume .\samples\Resumes\sample_resume.pdf `
   --job-description .\samples\Job_description\sample_job_description.pdf `
   --provider ollama
@@ -255,13 +255,13 @@ python main.py `
 After setting `GEMINI_API_KEY` in `.env` (see [Getting an API key](#getting-an-api-key-optional--only-for-gemini)):
 
 ```bash
-python main.py --resume ./my_resume.pdf --job-description ./job.docx --provider gemini
+resume-crew --resume ./my_resume.pdf --job-description ./job.docx --provider gemini
 ```
 
 ### Rank several resume versions with the LLM
 
 ```bash
-python main.py --rank-resumes ./resume_versions --job-description ./job.docx --provider ollama
+resume-crew --rank-resumes ./resume_versions --job-description ./job.docx --provider ollama
 ```
 
 Each resume in the folder gets its own LLM scoring call (0–100 with a one-line note), so ranking a large folder takes proportionally longer and, on `--provider gemini`, costs one API call per file.
@@ -269,9 +269,9 @@ Each resume in the folder gets its own LLM scoring call (0–100 with a one-line
 ### Hardware and model diagnostics
 
 ```bash
-python main.py --check-hardware
-python main.py --check-hardware --ollama-profile mps
-python main.py --version
+resume-crew --check-hardware
+resume-crew --check-hardware --ollama-profile mps
+resume-crew --version
 ```
 
 ## Usage — Web UI (Gradio)
@@ -282,11 +282,11 @@ Start the browser interface once your virtual environment is active:
 resume-crew-ui
 ```
 
-From a source checkout, `python app.py` remains a backward-compatible shim.
+Use the installed console commands from the activated virtual environment; no source-checkout import shim is required.
 
 The UI opens automatically at `http://localhost:7860` and includes:
 
-- **Analyze** — upload a resume and job description, choose a provider, and review the match report. Results include Score, Resume Profile, Job Profile, Gap Analysis, Tailored Bullets, Interview Prep, Resume Evidence, and Full Report. Cancel stops analysis between pipeline stages; the Full Report tab offers PDF and Word downloads.
+- **Analyze** — upload a resume and job description, choose a provider, and review the match report. Results include Score, Resume Profile, Job Profile, Gap Analysis, Tailored Bullets, Interview Prep, Resume Evidence, and Full Report. Cancel stops analysis between pipeline stages; the Full Report tab offers PDF and Word downloads. Generated reports remain local; the UI does not display server filesystem paths.
 - **Build Resume** — draft a resume tailored to a target job description, using *only* facts from an uploaded resume and/or freeform notes you provide. Nothing is invented: no employer, date, skill, or number appears unless it's in your source material.
 - **Rank Resumes** — score a local folder of resumes against a JD, one lightweight LLM call per resume.
 - **Batch Analyze** — run the *full* 4-step analysis for every resume in a folder against one JD, saving a separate report per resume.
@@ -307,7 +307,7 @@ Public tunnels expose the app to anyone who can reach the URL. Resume files, not
    GRADIO_AUTH_PASS=replace_with_a_strong_password
    ```
 
-3. Run `python app.py`. The URL prints in the terminal after tunnel setup. Keep it and the credentials private; use a unique, strong password.
+3. Run `resume-crew-ui`. The URL prints in the terminal after tunnel setup. Keep it and the credentials private; use a unique, strong password.
 
 To use Gradio's built-in tunnel instead, set `GRADIO_SHARE=true` and keep both auth values configured. To run locally only, leave `GRADIO_SHARE=false` and `NGROK_AUTHTOKEN` empty.
 
@@ -322,15 +322,13 @@ GRADIO_SHARE=false      # Public Gradio tunnel (requires both auth values)
 
 ```text
 Resume_Crew/
-├── src/resume_crew/          # Application package
+├── src/resume_crew/          # Application package and console entry points
 ├── tests/                    # Automated tests
 ├── samples/                  # Versioned demonstration documents
 │   ├── Resumes/               #   sample_resume.pdf
 │   └── Job_description/       #   sample_job_description.pdf
 ├── output/                   # Created locally for generated reports (ignored)
-├── app.py                    # Gradio web UI entry point
-├── main.py                   # CLI entry point (source-checkout)
-├── .env.example               # Safe configuration template
+├── .env.example              # Safe configuration template
 └── pyproject.toml             # Package and dependency metadata
 ```
 
@@ -356,10 +354,10 @@ CrewAI execution traces and telemetry are disabled by default, both in `.env.exa
 | Unsupported file type | Convert the file to PDF, DOCX, TXT, or Markdown. |
 | Input exceeds character limit | Split the document or remove irrelevant appendices. |
 | PowerShell will not activate venv | Use the temporary execution-policy command in the [Windows installation](#windows-powershell) section. |
-| Slow local analysis | Run `python main.py --check-hardware`; reduce Ollama context or use a smaller local model. |
+| Slow local analysis | Run `resume-crew --check-hardware`; reduce Ollama context or use a smaller local model. |
 | ngrok tunnel not created | Ensure `pyngrok` is installed (`pip install pyngrok`) and `NGROK_AUTHTOKEN` is set in `.env`. |
 | Gradio port already in use | Set `GRADIO_PORT=7861` (or any free port) in `.env`. |
-| `python app.py` fails with `DLL load failed... Application Control policy has blocked this file` (Windows) | A managed/corporate Windows security policy (WDAC/AppLocker) is blocking a native DLL — usually pandas, pulled in by Gradio — often because the project folder still has the "downloaded from the internet" flag. In PowerShell from the project root: `Get-ChildItem -Path .\venv -Recurse \| Unblock-File`, then retry. If it still fails, move the project out of `Downloads` to a plain local folder (e.g. `C:\Resume_Crew`), delete `venv`, and reinstall. On a company-managed device the policy may be enforced centrally — ask IT to allow Python/pandas, or run the project inside WSL2 instead. |
+| `resume-crew-ui` fails with `DLL load failed... Application Control policy has blocked this file` (Windows) | A managed/corporate Windows security policy (WDAC/AppLocker) is blocking a native DLL — usually pandas, pulled in by Gradio — often because the project folder still has the "downloaded from the internet" flag. In PowerShell from the project root: `Get-ChildItem -Path .\venv -Recurse \| Unblock-File`, then retry. If it still fails, move the project out of `Downloads` to a plain local folder (e.g. `C:\Resume_Crew`), delete `venv`, and reinstall. On a company-managed device the policy may be enforced centrally — ask IT to allow Python/pandas, or run the project inside WSL2 instead. |
 
 ## Development and verification
 
@@ -367,7 +365,7 @@ Install development tools with `pip install -e '.[dev]'`.
 
 ```bash
 python -m pytest -q
-python -m py_compile main.py app.py src/resume_crew/*.py
+python -m compileall -q src
 python -m pip check
 ```
 

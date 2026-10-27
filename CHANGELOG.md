@@ -20,7 +20,7 @@ All notable changes to Resume_Crew are documented here.
 
 ### Fixed
 - CWD-dependent output directory (was `Path("output")` relative to CWD).
-- Fragile `sys.path` import hacks (kept only as a last-resort shim).
+- Removed checkout-only import shims; installed console commands are now the supported entry points.
 - Broad `except Exception` catch-alls narrowed where practical.
 
 ## [Unreleased]

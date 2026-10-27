@@ -18,17 +18,17 @@ build/
 
 # Private candidate data and generated reports
 output/
-archive/unwanted/
 data/
 
-# Logs
+# Logs and coverage
 *.log
+.coverage
+htmlcov/
 
 # OS/editor files
 .DS_Store
 .idea/
 .vscode/
-.taste-skill/
 
 # Do not accidentally commit user documents outside the supplied samples.
 *.pdf

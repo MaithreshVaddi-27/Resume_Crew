@@ -11,7 +11,7 @@ Resume_Crew is a Python package. Public surface below.
 : Public entry point returning a `Settings` instance.
 
 `resume_crew.config.OUTPUT_ROOT` (`Path`)
-: Project-root-resolved output directory (`<repo>/output`).
+: The application output directory (`output/` within the project).
 
 ## `resume_crew.document_reader`
 
@@ -69,7 +69,7 @@ Resume_Crew is a Python package. Public surface below.
 : List past runs most-recent-first.
 
 `read_run_report(directory) -> dict[str, str]`
-: Rehydrate all Markdown files for a past run.
+: Rehydrate all Markdown files for a past run. The directory must be a direct child of `OUTPUT_ROOT`; traversal paths are rejected.
 
 ## `resume_crew.cli`
 

@@ -32,10 +32,10 @@ typecheck:
 	mypy --config-file pyproject.toml src
 
 ui:
-	python app.py
+	resume-crew-ui
 
 cli:
-	python main.py --resume samples/Resumes/sample_resume.pdf --job-description samples/Job_description/sample_job_description.pdf --provider ollama
+	resume-crew --resume samples/Resumes/sample_resume.pdf --job-description samples/Job_description/sample_job_description.pdf --provider ollama
 
 clean:
 	rm -rf venv .pytest_cache __pycache__ src/**/__pycache__ *.egg-info dist build .ruff_cache .mypy_cache

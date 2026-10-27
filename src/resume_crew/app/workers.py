@@ -183,7 +183,7 @@ def _run_analysis_thread(
             raise AnalysisCancelled("Analysis cancelled by user.")
         directory, _timestamp = write_run_files(candidate, job_title, files, score=score.score)
 
-        step_q.put(f"✅ Done! Report saved to: {directory}")
+        step_q.put("✅ Done! Report saved locally and is ready to review.")
         result_q.put(
             (
                 "ok",
@@ -286,7 +286,7 @@ def analyze_stream(
         job_profile,
         gap_analysis,
         writer_output,
-        report_dir,
+        _report_dir,
         files,
         resume_text,
         candidate,
@@ -304,7 +304,7 @@ def analyze_stream(
         f"### `{score_pct}%` — {color_label}\n\n"
         f"`{bar}` {score_pct}/100\n\n"
         f"{score_md}\n\n"
-        f"---\n*Report saved to `{report_dir}`*"
+        f"---\n*Report saved locally and available in the Full report tab.*"
     )
 
     bullets, interview = split_writer_output_safe(writer_output)
@@ -315,17 +315,19 @@ def analyze_stream(
     docx_path = None
     try:
         pdf_bytes = build_pdf_report(files, candidate, job_title)
-        pdf_path = str(Path(report_dir) / "match_report.pdf")
+        pdf_path = str(Path(_report_dir) / "match_report.pdf")
         Path(pdf_path).write_bytes(pdf_bytes)
-    except Exception as exc:  # noqa: BLE001
-        log_lines.append(f"⚠️ PDF export failed: {exc}")
+    except Exception:  # noqa: BLE001
+        logger.exception("PDF export failed")
+        log_lines.append("⚠️ PDF export was unavailable for this report.")
 
     try:
         docx_bytes = build_docx_report(files, candidate, job_title)
-        docx_path = str(Path(report_dir) / "match_report.docx")
+        docx_path = str(Path(_report_dir) / "match_report.docx")
         Path(docx_path).write_bytes(docx_bytes)
-    except Exception as exc:  # noqa: BLE001
-        log_lines.append(f"⚠️ Word export failed: {exc}")
+    except Exception:  # noqa: BLE001
+        logger.exception("Word export failed")
+        log_lines.append("⚠️ Word export was unavailable for this report.")
 
     yield (
         "\n".join(log_lines),
@@ -375,7 +377,7 @@ def rank_resumes_fn(
         job_text = extract_text(jd_path)
         source = Path(directory_path.strip()).expanduser().resolve()
         if not source.is_dir():
-            yield f"❌ `{source}` is not a directory."
+            yield "❌ The selected folder is not available on the machine running Resume_Crew."
             return
 
         paths = _list_resume_files(source)
@@ -424,7 +426,7 @@ def batch_analyze_fn(
         job_text = extract_text(jd_path)
         source = Path(directory_path.strip()).expanduser().resolve()
         if not source.is_dir():
-            yield f"❌ `{source}` is not a directory."
+            yield "❌ The selected folder is not available on the machine running Resume_Crew."
             return
 
         paths = _list_resume_files(source)
@@ -463,17 +465,18 @@ def batch_analyze_fn(
                     candidate, job_title, files, score=score.score
                 )
 
-                results.append((path.name, score.score, str(directory)))
+                results.append((path.name, score.score, "Saved locally"))
             except Exception as exc:  # noqa: BLE001
-                results.append((path.name, None, _user_error("Resume analysis failed", exc)))
+                logger.exception("Batch analysis failed for %s: %s", path.name, exc)
+                results.append((path.name, None, "Analysis failed — check the server log."))
 
         results.sort(key=lambda item: (item[1] is None, -(item[1] or 0)))
-        lines = ["| Rank | Resume | Score | Saved To |", "|---:|---|---:|---|"]
+        lines = ["| Rank | Resume | Score | Status |", "|---:|---|---:|---|"]
         for idx, (name, score_val, note) in enumerate(results, 1):
             score_str = "--" if score_val is None else f"{score_val:.0f}%"
             safe_name = name.replace("|", chr(92) + "|")
             safe_note = note.replace("|", chr(92) + "|")
-            lines.append(f"| {idx} | {safe_name} | {score_str} | `{safe_note}` |")
+            lines.append(f"| {idx} | {safe_name} | {score_str} | {safe_note} |")
 
         log_lines.append("✅ Batch analysis complete.")
         yield "\n".join(log_lines) + "\n\n# Batch Analysis Results\n\n" + "\n".join(lines)
@@ -637,7 +640,7 @@ def build_resume_fn(
             resume_md += "\n\n---\n*⚠️ PDF/Word export was unavailable for this draft.*"
 
         yield (
-            f"✅ Draft ready — saved to `{directory}`",
+            "✅ Draft ready — the resume and available exports are ready to review.",
             resume_md,
             score_md,
             pdf_path,

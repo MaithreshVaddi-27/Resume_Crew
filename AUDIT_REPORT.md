@@ -43,7 +43,7 @@ The project has a cohesive purpose and a sensible separation between CLI, Gradio
 
 ## Ponytail complexity findings (read-only)
 
-- `yagni:` Remove import-time `sys.path` mutation in `workers.py`; direct-launch path manipulation is duplicated in app entry points. Prefer installed package entry points, retaining only a required checkout shim. [src/resume_crew/app/workers.py:20-34]
+- `yagni:` The installed console entry points now cover CLI and UI launch; no checkout import shim is retained.
 - `shrink:` Batch analysis repeats resume enumeration, score sorting, and Markdown escaping; reuse shared helpers where output semantics match. [src/resume_crew/app/workers.py:396-480]
 - `stdlib:` `ollama_is_running` and `list_ollama_models` duplicate URL request/error handling; stdlib feature is `urllib.request.urlopen`. Consolidate only if it shrinks the shared handling. [src/resume_crew/hardware.py:14-43]
 - `yagni:` `src/resume_crew/app/__init__.py` exports only the `main` module name; remove `__all__` unless wildcard imports are intentionally supported. [src/resume_crew/app/__init__.py:5]
@@ -64,9 +64,9 @@ Estimated complexity reduction: **15–25 lines; 0 dependencies**. Findings are 
 
 ### Current status — 2026-10-27
 
-- **Completed:** cancellation publication race, duplicate Analyze guard, server-local folder-path guidance, mobile settings layout, validated settings-driven UI initialization, accessible History score summaries, and ngrok startup ordering.
-- **Open:** upload-based folder workflows, immediate provider-call cancellation, user-safe error mapping, and removal/documentation of checkout `sys.path` shims.
-- **Verification:** 51 tests passed, 1 skipped; Ruff, formatting, compilation, and `git diff --check` passed; the installed `resume-crew-ui` entry point rendered on port 7863 in Brave DevTools with no console warnings or errors.
+- **Completed:** cancellation publication race, duplicate Analyze guard, server-local folder-path guidance, mobile settings layout, validated settings-driven UI initialization, accessible History score summaries, ngrok startup ordering, safe UI error mapping, and removal of checkout import shims.
+- **Open:** upload-based folder workflows and immediate provider-call cancellation. Installed console entry points are now the only supported launch path; user-safe error mapping is complete.
+- **Verification:** Previous verification recorded 51 tests passed and 1 skipped; Ruff, formatting, compilation, and `git diff --check` passed. This cleanup requires a fresh verification pass before release.
 - **Review limitation:** delegated final diff reviews could not run because the configured sub-agent provider returned `401 authentication_failed`; findings below were verified directly.
 
 ### Ranked findings
@@ -79,7 +79,7 @@ Estimated complexity reduction: **15–25 lines; 0 dependencies**. Findings are 
 
 4. **P2 — ngrok is connected before Gradio starts listening — fixed.** The ngrok branch now starts Gradio with `prevent_thread_lock=True`, then creates the tunnel against the listening port and keeps the process alive. Local-only and built-in Gradio sharing paths remain unchanged. `src/resume_crew/app/main.py:603-649`.
 
-5. **P2 — Root UI shim still mutates `sys.path` — reduced.** Installed users now have the `resume-crew-ui` console command, and the README identifies `python app.py` as a source-checkout compatibility shim. Removing the shim itself remains a follow-up because existing checkout workflows depend on it. `app.py:9-14`; `pyproject.toml:29-31`; `README.md:277-287`.
+5. **P2 — Root checkout shims — resolved.** Removed the root `app.py` and `main.py` import shims. Installed `resume-crew` and `resume-crew-ui` console commands are the supported launch path, eliminating runtime `sys.path` mutation.
 
 6. **P2 — Settings controls can display values different from validated runtime settings.** The UI reads raw environment values while workers use normalized `Settings`; an invalid or non-listed Gemini model can appear selected even though runtime settings resolve separately. Initialize controls from one validated settings object and normalize values against dropdown choices. `src/resume_crew/app/main.py:76-115`; `src/resume_crew/app/workers.py:56-69`.
 
@@ -106,7 +106,7 @@ Estimated complexity reduction: **15–25 lines; 0 dependencies**. Findings are 
 - `python -m pytest`: **51 passed, 1 skipped**.
 - `ruff check src tests`: **passed**.
 - `ruff format --check src tests`: **passed**.
-- `python -m compileall -q src app.py main.py`: **passed**.
+- `python -m compileall -q src`: **passed** before this cleanup; rerun after the entry-point changes.
 - `git diff --check`: **passed**.
 
 ## Fix pass — 2026-10-27
@@ -124,15 +124,16 @@ The lock intentionally limits concurrent analysis to one process-wide job. Per-u
 
 ### Phase 3 — Packaging and entry points
 
-- Added the installed-package `resume-crew-ui` console entry point and documented it as the preferred UI command. `python app.py` remains a source-checkout compatibility shim. `pyproject.toml:29-31`, `README.md:277-285`.
+- Added the installed-package `resume-crew-ui` console entry point and made it the supported UI command. Root checkout shims were removed; `pyproject.toml:29-31`.
 - Installed the package successfully in `.venv` after adding the declared `setuptools` build backend there; the system-managed Python was intentionally not overridden after its PEP 668 refusal.
-- Manually launched `.venv/bin/resume-crew-ui` on port `7863`. Brave DevTools loaded the UI, exposed all primary tabs, and reported no warning/error console messages.
-- Full removal of checkout shims and Docker entry-point migration remain optional follow-up work; the installed command now covers normal package usage.
+- Previously manually launched `.venv/bin/resume-crew-ui` on port `7863`. A fresh launch after this cleanup is required because the root shims and Docker command changed.
+- Docker now starts the installed `resume-crew-ui` command directly, matching the supported package workflow.
 
 ### Final hardening pass — 2026-10-27
 
 - Worker exceptions now log full diagnostics server-side and return concise actionable messages to the UI, avoiding disclosure of local paths and provider internals in shared Markdown outputs. `src/resume_crew/app/workers.py`.
-- Resume ranking continues to use the shared Markdown table formatter; supported folder workflows and checkout shims were retained because they remain documented user-facing paths.
+- Resume ranking continues to use the shared Markdown table formatter; supported folder workflows remain documented as local-machine operations.
 - Backend smoke checks covered ranking output and error redaction with mocked provider boundaries. The full regression suite, Ruff lint, formatting, and diff checks passed.
 - Manual Brave DevTools verification on the installed UI confirmed readable typography, strong dark-theme contrast, aligned settings controls, accessible labels/tabs/buttons, working History chart and score summary, and no browser warnings or errors. No visual CSS changes were needed in this pass.
 - Deferred: upload-based folder workflows and immediate cancellation during provider calls; both require broader workflow contracts rather than safe local cleanup.
+- **Manual Gemma 1B verification — passed:** On 2026-10-27, Brave DevTools exercised the installed UI on port 7865 with the sample resume and job description, Ollama, and `gemma3:1b`. The full four-stage analysis completed, all report tabs rendered, PDF/DOCX links appeared, History displayed saved runs and a trend chart, and Hardware reported Ollama reachable. The UI’s completion, export-failure, folder-validation, batch-status, and resume-builder messages now keep absolute server filesystem paths and exception details out of user-facing output.
