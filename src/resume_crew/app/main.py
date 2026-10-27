@@ -7,6 +7,7 @@ Layout and event wiring only. All long-running analysis logic lives in
 from __future__ import annotations
 
 import os
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -600,31 +601,42 @@ def main() -> None:
 
     port = settings.gradio_port
 
-    # Prefer ngrok when configured; otherwise use Gradio's built-in tunnel.
-    ngrok_url = None
+    # Start Gradio before creating an external tunnel so the public endpoint
+    # never points at a port that is still starting.
     token = settings.ngrok_authtoken
+    demo = build_demo()
+    print(f"\nResume_Crew is ready at http://localhost:{port}")
+
     if token:
+        demo.launch(
+            server_port=port,
+            share=False,
+            show_error=True,
+            inbrowser=True,
+            auth=settings.auth,
+            prevent_thread_lock=True,
+            **_LAUNCH_STYLE_KWARGS,
+        )
         try:
             from pyngrok import conf, ngrok  # noqa: PLC0415
 
             conf.get_default().auth_token = token
             tunnel = ngrok.connect(port, "http")
-            ngrok_url = tunnel.public_url
             print(f"\n{'=' * 60}")
-            print(f"  🌐  Live ngrok URL: {ngrok_url}")
+            print(f"  🌐  Live ngrok URL: {tunnel.public_url}")
             print(f"{'=' * 60}\n")
+            threading.Event().wait()
         except ImportError:
             print("[app] pyngrok is not installed. Run: pip install pyngrok")
+            threading.Event().wait()
         except Exception as exc:  # noqa: BLE001
             print(f"[app] ngrok setup failed: {exc}")
+            threading.Event().wait()
+        return
 
-    use_share = (ngrok_url is None) and settings.gradio_share
-
-    demo = build_demo()
-    print(f"\nResume_Crew is ready at http://localhost:{port}")
-    if ngrok_url is None and not use_share:
+    use_share = settings.gradio_share
+    if not use_share:
         print("   Public sharing is off. Configure authenticated sharing in .env to enable it.")
-
     demo.launch(
         server_port=port,
         share=use_share,

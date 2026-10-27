@@ -64,7 +64,7 @@ Estimated complexity reduction: **15–25 lines; 0 dependencies**. Findings are 
 
 ### Current status — 2026-10-27
 
-- **Completed:** cancellation publication race, duplicate Analyze guard, server-local folder-path guidance, mobile settings layout, validated settings-driven UI initialization, and accessible History score summaries.
+- **Completed:** cancellation publication race, duplicate Analyze guard, server-local folder-path guidance, mobile settings layout, validated settings-driven UI initialization, accessible History score summaries, and ngrok startup ordering.
 - **Open:** upload-based folder workflows, immediate provider-call cancellation, public-tunnel startup ordering, user-safe error mapping, and removal/documentation of checkout `sys.path` shims.
 - **Verification:** 51 tests passed, 1 skipped; Ruff, formatting, compilation, and `git diff --check` passed; Brave DevTools desktop/mobile checks passed with no console warnings or errors.
 - **Review limitation:** delegated final diff reviews could not run because the configured sub-agent provider returned `401 authentication_failed`; findings below were verified directly.
@@ -77,7 +77,7 @@ Estimated complexity reduction: **15–25 lines; 0 dependencies**. Findings are 
 
 3. **P1 — Cancel is cooperative, not immediate.** Cancellation cannot interrupt an in-flight provider call or retry sleep. A final checkpoint was added before report publication, preventing a cancel received during report assembly from publishing a run, but the UI should continue to describe cancellation as stopping after the current step. `src/resume_crew/app/workers.py:144-170,320-324`.
 
-4. **P2 — ngrok is connected before Gradio starts listening.** `ngrok.connect()` runs before `demo.launch()`, so a public URL may briefly expose a connection failure during startup. Start Gradio first and establish/announce the tunnel only after the local server is reachable, or use Gradio’s supported sharing flow. `src/resume_crew/app/main.py:581-601`.
+4. **P2 — ngrok is connected before Gradio starts listening — fixed.** The ngrok branch now starts Gradio with `prevent_thread_lock=True`, then creates the tunnel against the listening port and keeps the process alive. Local-only and built-in Gradio sharing paths remain unchanged. `src/resume_crew/app/main.py:603-649`.
 
 5. **P2 — Root UI shim still mutates `sys.path`.** `app.py` is checkout-friendly but conflicts with the project rule against `sys.path.insert` hacks and behaves differently from an installed package. Add a proper installed entry point or document the shim as an intentional source-checkout compatibility path. `app.py:9-14`; `pyproject.toml:29-30`.
 
