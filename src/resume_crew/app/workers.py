@@ -53,6 +53,11 @@ from resume_crew.storage import (  # noqa: E402
 # ---------------------------------------------------------------------------
 
 
+# ponytail: one global analysis lock keeps the UI state consistent; use per-user
+# job isolation only if concurrent multi-user hosting becomes a requirement.
+_analysis_lock = threading.Lock()
+
+
 def local_model_choices() -> tuple[list[str], str]:
     """Return installed local models, falling back to the configured Ollama model."""
     settings = load_settings()
@@ -165,6 +170,8 @@ def _run_analysis_thread(
             gap_analysis,
             writer_output,
         )
+        if cancel_event.is_set():
+            raise AnalysisCancelled("Analysis cancelled by user.")
         directory, _timestamp = write_run_files(candidate, job_title, files, score=score.score)
 
         step_q.put(f"✅ Done! Report saved to: {directory}")
@@ -191,6 +198,7 @@ def _run_analysis_thread(
         step_q.put(f"❌ Error: {exc}")
         result_q.put(("error", str(exc)))
     finally:
+        _analysis_lock.release()
         step_q.put(None)  # Sentinel — signals the generator to stop polling.
 
 
@@ -208,6 +216,14 @@ def analyze_stream(
     if not resume_path or not jd_path:
         yield (
             "⚠️ Please upload both a resume and a job description.",
+            *EMPTY_TABS,
+            cancel_event_state,
+        )
+        return
+
+    if not _analysis_lock.acquire(blocking=False):
+        yield (
+            "⚠️ An analysis is already running. Wait for it to finish or cancel it first.",
             *EMPTY_TABS,
             cancel_event_state,
         )
@@ -625,14 +641,15 @@ def build_resume_fn(
 # ---------------------------------------------------------------------------
 
 
-def refresh_history_fn() -> tuple[Any, str, Any]:
-    """List past runs, most recent first, with a score-trend line chart."""
+def refresh_history_fn() -> tuple[Any, str, Any, str]:
+    """List past runs with a chart and a text summary of every score."""
     runs = list_report_runs()
     if not runs:
         return (
             gr.Dropdown(choices=[], value=None),
             "No past runs found yet — analyze a resume first.",
             None,
+            "",
         )
 
     choices = [
@@ -644,7 +661,13 @@ def refresh_history_fn() -> tuple[Any, str, Any]:
         for r in runs
     ]
 
+    summary = "\n".join(
+        f"- **{r.get('timestamp', '?')}** — {r.get('candidate', '?')} vs "
+        f"{r.get('job_title', '?')}: **{r.get('score', 0):.0f}%**"
+        for r in runs
+    )
     fig = None
+    chart_status = ""
     try:
         import matplotlib  # noqa: PLC0415
 
@@ -672,9 +695,12 @@ def refresh_history_fn() -> tuple[Any, str, Any]:
             spine.set_color(grid)
         fig.tight_layout()
     except Exception:
-        fig = None
+        chart_status = "_Trend chart unavailable; the score summary below is still current._"
 
-    return gr.Dropdown(choices=choices, value=choices[0][1]), f"Found {len(runs)} past run(s).", fig
+    status = f"Found {len(runs)} past run(s)."
+    if chart_status:
+        status += f" {chart_status}"
+    return gr.Dropdown(choices=choices, value=choices[0][1]), status, fig, summary
 
 
 def load_history_run_fn(selected_path: str) -> tuple[str, str, str, str, str]:

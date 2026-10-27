@@ -241,6 +241,8 @@ body > footer, .gradio-container footer { color: var(--muted) !important; }
     .document-row { padding: 10px !important; gap: 10px !important; }
     .action-row { gap: 8px !important; }
     #settings-accordion .model-toolbar { gap: 8px !important; }
+    #settings-accordion .model-toolbar > * { min-width: 100%; }
+    #settings-accordion .model-toolbar button { width: 100%; }
     .gradio-container .tab-nav { gap: 0 !important; }
     .gradio-container .tab-nav button { padding: 9px 10px !important; }
 }

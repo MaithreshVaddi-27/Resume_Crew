@@ -23,8 +23,10 @@ os.environ["OTEL_SDK_DISABLED"] = "true"
 import gradio as gr  # noqa: E402
 
 from resume_crew.app import workers  # noqa: E402
+from resume_crew.config import load_settings  # noqa: E402
 from resume_crew.document_reader import SUPPORTED_DOCUMENT_EXTENSIONS  # noqa: E402
 
+_SETTINGS = load_settings()
 PROVIDER_CHOICES = ["auto", "ollama", "gemini"]
 PRIVACY_NOTICE = (
     "Ollama keeps analysis on this machine. Gemini sends extracted document text "
@@ -81,7 +83,7 @@ def build_demo() -> gr.Blocks:
                         ("Ollama (local)", "ollama"),
                         ("Gemini (cloud)", "gemini"),
                     ],
-                    value=os.getenv("LLM_PROVIDER", "auto"),
+                    value=_SETTINGS.provider,
                     label="Provider",
                     info=(
                         "Choose Gemini for cloud analysis, or Ollama to keep prompts local. "
@@ -104,13 +106,17 @@ def build_demo() -> gr.Blocks:
                 )
                 gemini_model_dd = gr.Dropdown(
                     choices=GEMINI_MODELS,
-                    value=os.getenv("GEMINI_MODEL", "gemini/gemini-3.8-flash"),
+                    value=(
+                        _SETTINGS.gemini_model
+                        if _SETTINGS.gemini_model in dict(GEMINI_MODELS).values()
+                        else GEMINI_MODELS[0][1]
+                    ),
                     label="Gemini model",
                     info=(
                         "Flash balances speed and quality; Flash-Lite is faster and cheaper; "
                         "Pro suits harder tasks."
                     ),
-                    visible=os.getenv("LLM_PROVIDER", "auto") == "gemini",
+                    visible=_SETTINGS.provider == "gemini",
                     scale=2,
                     elem_id="gemini-model-select",
                 )
@@ -349,7 +355,8 @@ def build_demo() -> gr.Blocks:
                     with gr.Column(scale=2):
                         dir_input = gr.Textbox(
                             label="Folder containing resumes",
-                            placeholder="e.g. C:\\Users\\you\\Resumes  or  ./samples/Resumes",
+                            placeholder="Folder on the machine running Resume_Crew, e.g. ./samples/Resumes",
+                            info="This path is resolved on the machine running Resume_Crew, not your browser device.",
                             elem_id="dir-input",
                         )
                     with gr.Column(scale=1):
@@ -384,7 +391,8 @@ def build_demo() -> gr.Blocks:
                     with gr.Column(scale=2):
                         batch_dir_input = gr.Textbox(
                             label="Folder containing resumes",
-                            placeholder="e.g. C:\\Users\\you\\Resumes  or  ./samples/Resumes",
+                            placeholder="Folder on the machine running Resume_Crew, e.g. ./samples/Resumes",
+                            info="This path is resolved on the machine running Resume_Crew, not your browser device.",
                         )
                     with gr.Column(scale=1):
                         batch_jd_input = gr.File(
@@ -468,6 +476,10 @@ def build_demo() -> gr.Blocks:
                         )
                         history_status = gr.Markdown()
                         history_trend_plot = gr.Plot(label="Score trend")
+                        history_summary = gr.Markdown(
+                            label="Score summary",
+                            value="Refresh history to load saved scores.",
+                        )
                         history_run_dd = gr.Dropdown(label="Past runs", choices=[])
 
                         with gr.Tabs():
@@ -485,7 +497,12 @@ def build_demo() -> gr.Blocks:
                         history_refresh_btn.click(
                             fn=workers.refresh_history_fn,
                             inputs=[],
-                            outputs=[history_run_dd, history_status, history_trend_plot],
+                            outputs=[
+                                history_run_dd,
+                                history_status,
+                                history_trend_plot,
+                                history_summary,
+                            ],
                         )
                         history_run_dd.change(
                             fn=workers.load_history_run_fn,
@@ -501,7 +518,12 @@ def build_demo() -> gr.Blocks:
                         demo.load(
                             fn=workers.refresh_history_fn,
                             inputs=[],
-                            outputs=[history_run_dd, history_status, history_trend_plot],
+                            outputs=[
+                                history_run_dd,
+                                history_status,
+                                history_trend_plot,
+                                history_summary,
+                            ],
                         )
 
                     with gr.Tab("Hardware"):
