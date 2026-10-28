@@ -333,7 +333,7 @@ resume-crew-ui
 
 Use the installed console commands from the activated virtual environment; no source-checkout import shim is required.
 
-The UI opens automatically at `http://localhost:7860` and includes:
+The UI opens automatically at `http://localhost:7860`. Expand **Analysis settings** to choose a provider and model; a blue status banner identifies the active provider. Workflow tabs use equal-width tracks on desktop and reflow for smaller screens. Choose MLX-LM or Ollama to keep analysis local, or Gemini to send extracted document text to Google. The UI includes:
 
 - **Analyze** — upload a resume and job description, choose a provider, and review the match report. Results include Score, Resume Profile, Job Profile, Gap Analysis, Tailored Bullets, Interview Prep, Resume Evidence, and Full Report. Cancel stops analysis between pipeline stages; the Full Report tab offers PDF and Word downloads. Generated reports remain local; the UI does not display server filesystem paths.
 - **Build Resume** — draft a resume tailored to a target job description, using *only* facts from an uploaded resume and/or freeform notes you provide. Nothing is invented: no employer, date, skill, or number appears unless it's in your source material.
@@ -749,7 +749,7 @@ resume-crew-ui
 
 Use the installed console commands from the activated virtual environment; no source-checkout import shim is required.
 
-The UI opens automatically at `http://localhost:7860` and includes:
+The UI opens automatically at `http://localhost:7860`. Expand **Analysis settings** to choose a provider and model; a blue status banner identifies the active provider. Workflow tabs use equal-width tracks on desktop and reflow for smaller screens. Choose MLX-LM or Ollama to keep analysis local, or Gemini to send extracted document text to Google. The UI includes:
 
 - **Analyze** — upload a resume and job description, choose a provider, and review the match report. Results include Score, Resume Profile, Job Profile, Gap Analysis, Tailored Bullets, Interview Prep, Resume Evidence, and Full Report. Cancel stops analysis between pipeline stages; the Full Report tab offers PDF and Word downloads. Generated reports remain local; the UI does not display server filesystem paths.
 - **Build Resume** — draft a resume tailored to a target job description, using *only* facts from an uploaded resume and/or freeform notes you provide. Nothing is invented: no employer, date, skill, or number appears unless it's in your source material.

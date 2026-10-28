@@ -13,7 +13,7 @@ Resume Crew is a small, local-first Python package with two installed console co
 | `pipeline.py` | CrewAI agent orchestration (resume profile → job profile → gap analysis → writer) + Markdown/PDF/DOCX report assembly. Prompts rendered from `prompts/*.md` via `_render_prompt()`. |
 | `storage.py` | Output directory creation, run metadata sidecars, run listing, and report rehydration. |
 | `cli.py` | CLI entry (argparse) for analysis, resume ranking, and hardware checks. |
-| `app/` | Gradio web UI: `main.py` (layout + wiring), `workers.py` (analysis/rank/batch/compare/build/history functions), `styles.css`. |
+| `app/` | Gradio web UI: `main.py` (layout + wiring), `workers.py` (analysis/rank/batch/compare/build/history functions), `styles.css` (midnight navy/blue responsive theme, workflow tabs, and selected-provider status). |
 
 ## Data flow (full analysis)
 1. Resume + JD extracted to text (`document_reader.extract_text`).

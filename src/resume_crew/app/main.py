@@ -69,15 +69,25 @@ LOCAL_MODELS, DEFAULT_LOCAL_MODEL = workers.local_model_choices()
 _CSS_PATH = Path(__file__).resolve().parent / "styles.css"
 _CUSTOM_CSS = _CSS_PATH.read_text(encoding="utf-8") if _CSS_PATH.is_file() else ""
 
+# Midnight-blue foundations; CSS supplies the full visual system.
+_THEME = gr.themes.Soft(
+    primary_hue="blue",
+    secondary_hue="indigo",
+    neutral_hue="slate",
+    font=["Inter", "Avenir Next", "Segoe UI", "sans-serif"],
+    font_mono=["SF Mono", "Menlo", "ui-monospace", "monospace"],
+    radius_size="md",
+)
+
 # Gradio 6 moved theme/css from Blocks() constructor to launch(); detect the
 # installed major version and route the params to wherever they apply.
 _GRADIO_MAJOR = int(gr.__version__.split(".")[0]) if gr.__version__[:1].isdigit() else 4
 _BLOCKS_STYLE_KWARGS: dict[str, Any] = {}
 _LAUNCH_STYLE_KWARGS: dict[str, Any] = {}
 if _GRADIO_MAJOR >= 6:
-    _LAUNCH_STYLE_KWARGS = {"theme": gr.themes.Base(), "css": _CUSTOM_CSS}
+    _LAUNCH_STYLE_KWARGS = {"theme": _THEME, "css": _CUSTOM_CSS}
 else:
-    _BLOCKS_STYLE_KWARGS = {"theme": gr.themes.Base(), "css": _CUSTOM_CSS}
+    _BLOCKS_STYLE_KWARGS = {"theme": _THEME, "css": _CUSTOM_CSS}
 
 
 def build_demo() -> Any:  # gr.Blocks type varies by gradio version
@@ -86,13 +96,32 @@ def build_demo() -> Any:  # gr.Blocks type varies by gradio version
         analytics_enabled=False,
         **_BLOCKS_STYLE_KWARGS,
     ) as demo:
-        # ── Header ────────────────────────────────────────────────────────────
+        # ── Apple macOS Navigation Header ──────────────────────────────────────
         gr.HTML("""
         <header id="app-header">
-            <div class="brand-mark" aria-hidden="true">RC</div>
-            <div>
-                <h1>Resume Crew</h1>
-                <p>Make your experience easier to match to the role.</p>
+            <div class="brand-group">
+                <div class="brand-icon" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                </div>
+                <div class="brand-copy">
+                    <div class="brand-title-wrap">
+                        <h1>Resume Crew</h1>
+                        <span class="brand-badge">v1.4</span>
+                    </div>
+                    <p>Evidence-grounded resume alignment with verified role matching</p>
+                </div>
+            </div>
+            <div class="header-status">
+                <div class="status-pill">
+                    <span class="status-indicator"></span>
+                    <span>Private by design · Provider choice</span>
+                </div>
             </div>
         </header>
         """)
@@ -622,9 +651,11 @@ def build_demo() -> Any:  # gr.Blocks type varies by gradio version
 
         # ── Footer ─────────────────────────────────────────────────────────────
         gr.HTML("""
-        <footer id="app-footer" style="text-align:center;padding:20px 0 8px;">
-            Resume Crew v1.4.0 — grounded, local-first AI analysis.
-            Keyword scores are not ATS simulations or hiring recommendations.
+        <footer id="app-footer">
+            <div class="footer-content">
+                <span>Resume Crew &bull; Evidence-grounded, private AI analysis</span>
+                <span class="footer-sub">Keyword scores reflect evidence alignment, not hiring recommendations</span>
+            </div>
         </footer>
         """)
 
