@@ -1,4 +1,4 @@
-"""Gradio web interface for Resume Crew with optional ngrok live sharing.
+"""Gradio web interface for Resume Crew with optional authenticated sharing.
 
 Layout and event wiring only. All long-running analysis logic lives in
 :mod:`resume_crew.app.workers`.
@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import os
 import signal
-import threading
 from pathlib import Path
 from typing import Any
 
@@ -673,12 +672,6 @@ def main() -> None:
     settings = load_settings()
     settings.apply_telemetry_env()
 
-    if (settings.ngrok_authtoken or settings.gradio_share) and not settings.auth:
-        raise SystemExit(
-            "Public sharing requires GRADIO_AUTH_USER and GRADIO_AUTH_PASS. "
-            "Set both in .env or disable public sharing."
-        )
-
     port = settings.gradio_port
 
     # Handle graceful shutdown on SIGTERM/SIGINT.
@@ -689,42 +682,11 @@ def main() -> None:
     signal.signal(signal.SIGTERM, _shutdown)
     signal.signal(signal.SIGINT, _shutdown)
 
-    # Start Gradio before creating an external tunnel so the public endpoint
-    # never points at a port that is still starting.
-    token = settings.ngrok_authtoken
+    use_share = settings.gradio_share
     demo = build_demo()
     print(f"\nResume Crew is ready at http://localhost:{port}")
-
-    if token:
-        demo.launch(
-            server_port=port,
-            share=False,
-            show_error=True,
-            inbrowser=True,
-            auth=settings.auth,
-            prevent_thread_lock=True,
-            **_LAUNCH_STYLE_KWARGS,
-        )
-        try:
-            from pyngrok import conf, ngrok  # noqa: PLC0415
-
-            conf.get_default().auth_token = token
-            tunnel = ngrok.connect(str(port), "http")
-            print(f"\n{'=' * 60}")
-            print(f"  🌐  Live ngrok URL: {tunnel.public_url}")
-            print(f"{'=' * 60}\n")
-            threading.Event().wait()
-        except ImportError:
-            print("[app] pyngrok is not installed. Run: pip install pyngrok")
-            threading.Event().wait()
-        except Exception as exc:  # noqa: BLE001
-            print(f"[app] ngrok setup failed: {exc}")
-            threading.Event().wait()
-        return
-
-    use_share = settings.gradio_share
     if not use_share:
-        print("   Public sharing is off. Configure authenticated sharing in .env to enable it.")
+        print("   Public sharing is off. Set GRADIO_SHARE=true to enable authenticated sharing.")
     demo.launch(
         server_port=port,
         share=use_share,

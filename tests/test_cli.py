@@ -22,6 +22,37 @@ def test_settings_reject_invalid_numeric_ranges(monkeypatch, setting: str, value
         Settings.from_env()
 
 
+@pytest.mark.parametrize(
+    ("username", "password"),
+    [(None, None), ("resume-user", None), (None, "strong-password")],
+)
+def test_gradio_share_requires_both_auth_values(
+    monkeypatch, username: str | None, password: str | None
+) -> None:
+    monkeypatch.setenv("GRADIO_SHARE", "true")
+    if username is None:
+        monkeypatch.delenv("GRADIO_AUTH_USER", raising=False)
+    else:
+        monkeypatch.setenv("GRADIO_AUTH_USER", username)
+    if password is None:
+        monkeypatch.delenv("GRADIO_AUTH_PASS", raising=False)
+    else:
+        monkeypatch.setenv("GRADIO_AUTH_PASS", password)
+
+    with pytest.raises(ValueError, match="requires both GRADIO_AUTH_USER and GRADIO_AUTH_PASS"):
+        Settings.from_env()
+
+
+def test_gradio_share_accepts_both_auth_values(monkeypatch) -> None:
+    monkeypatch.setenv("GRADIO_SHARE", "true")
+    monkeypatch.setenv("GRADIO_AUTH_USER", "resume-user")
+    monkeypatch.setenv("GRADIO_AUTH_PASS", "strong-password")
+
+    settings = Settings.from_env()
+
+    assert settings.auth == ("resume-user", "strong-password")
+
+
 def test_cli_forces_tracing_and_telemetry_off() -> None:
     _disable_external_tracing()
     assert os.environ["CREWAI_TRACING_ENABLED"] == "false"

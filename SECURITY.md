@@ -15,7 +15,7 @@ In scope:
 - Document extraction and parsing (PDF, DOCX, TXT, MD)
 - LLM provider configuration and API key handling
 - Output directory and report file writing
-- Gradio UI and ngrok tunnel authentication
+- Gradio UI and public-share authentication
 - Dependency vulnerabilities
 
 Out of scope:
@@ -35,4 +35,4 @@ Out of scope:
 - Telemetry is disabled by default (CrewAI, OpenTelemetry).
 - Report files are written under `output/` which is gitignored.
 - The UI does not expose server filesystem paths in success/error messages.
-- Public tunnels (ngrok/Gradio) require both `GRADIO_AUTH_USER` and `GRADIO_AUTH_PASS`.
+- Gradio public sharing requires both `GRADIO_AUTH_USER` and `GRADIO_AUTH_PASS`.

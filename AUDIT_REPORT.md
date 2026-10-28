@@ -11,7 +11,7 @@ The project has a cohesive purpose and a sensible separation between CLI, Gradio
 
 ## Resolved findings
 
-1. **Unauthenticated public UI exposure — fixed.** `src/resume_crew/app/main.py` exits before opening ngrok or Gradio sharing unless both `GRADIO_AUTH_USER` and `GRADIO_AUTH_PASS` are configured. Local-only launch remains available without credentials. Public sharing still uses a shared local report store and is not suitable for multi-user hosting; see `docs/deployment.md`.
+1. **Unauthenticated public UI exposure — fixed.** `Settings.from_env()` rejects `GRADIO_SHARE=true` unless both `GRADIO_AUTH_USER` and `GRADIO_AUTH_PASS` are configured. Local-only launch remains available without credentials. Public sharing still uses a shared local report store and is not suitable for multi-user hosting; see `docs/deployment.md`.
 2. **Malformed LLM scores treated as real scores — fixed.** `src/resume_crew/pipeline.py::_parse_match_score` rejects missing and out-of-range scores; failed rank results remain distinct from numeric scores.
 3. **Partial report writes — fixed for caught write failures.** `src/resume_crew/storage.py::write_run_files` stages files and metadata, then publishes the completed run. Its cleanup path removes the staging and reserved run directories if a write fails. This is not a guarantee against abrupt machine or storage failure during filesystem publication.
 4. **Combined resume and notes exceeded the document text limit — fixed.** `src/resume_crew/app/workers.py::build_resume_fn` checks combined source length before LLM setup and returns a clear limit message.
@@ -64,7 +64,7 @@ Estimated complexity reduction: **15–25 lines; 0 dependencies**. Findings are 
 
 ### Current status — 2026-10-27
 
-- **Completed:** cancellation publication race, duplicate Analyze guard, server-local folder-path guidance, mobile settings layout, validated settings-driven UI initialization, accessible History score summaries, ngrok startup ordering, safe UI error mapping, and removal of checkout import shims.
+- **Completed:** cancellation publication race, duplicate Analyze guard, server-local folder-path guidance, mobile settings layout, validated settings-driven UI initialization, accessible History score summaries, authenticated Gradio share, safe UI error mapping, and removal of checkout import shims.
 - **Open:** upload-based folder workflows and immediate provider-call cancellation. Installed console entry points are now the only supported launch path; user-safe error mapping is complete.
 - **Verification:** Previous verification recorded 51 tests passed and 1 skipped; Ruff, formatting, compilation, and `git diff --check` passed. This cleanup requires a fresh verification pass before release.
 - **Review limitation:** delegated final diff reviews could not run because the configured sub-agent provider returned `401 authentication_failed`; findings below were verified directly.
@@ -77,7 +77,7 @@ Estimated complexity reduction: **15–25 lines; 0 dependencies**. Findings are 
 
 3. **P1 — Cancel is cooperative, not immediate.** Cancellation cannot interrupt an in-flight provider call or retry sleep. A final checkpoint was added before report publication, preventing a cancel received during report assembly from publishing a run, but the UI should continue to describe cancellation as stopping after the current step. `src/resume_crew/app/workers.py:144-170,320-324`.
 
-4. **P2 — ngrok is connected before Gradio starts listening — fixed.** The ngrok branch now starts Gradio with `prevent_thread_lock=True`, then creates the tunnel against the listening port and keeps the process alive. Local-only and built-in Gradio sharing paths remain unchanged. `src/resume_crew/app/main.py:603-649`.
+4. **P2 — Authenticated public sharing — fixed.** The app uses Gradio's built-in share tunnel and rejects sharing unless both `GRADIO_AUTH_USER` and `GRADIO_AUTH_PASS` are configured.
 
 5. **P2 — Root checkout shims — resolved.** Removed the root `app.py` and `main.py` import shims. Installed `resume-crew` and `resume-crew-ui` console commands are the supported launch path, eliminating runtime `sys.path` mutation.
 

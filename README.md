@@ -7,7 +7,6 @@
 [![MLX-LM](https://img.shields.io/badge/MLX--LM-Apple%20Silicon-green.svg?logo=apple)](https://github.com/ml-explore/mlx-lm)
 [![Ollama](https://img.shields.io/badge/Ollama-local%20LLM-purple.svg)](https://ollama.com/)
 [![CrewAI](https://img.shields.io/badge/Agent%20framework-CrewAI-blue.svg)](https://docs.crewai.com/)
-[![Pyngrok](https://img.shields.io/badge/Tunneling-pyngrok-lightgrey.svg)](https://github.com/alexdeleon/pyngrok)
 [![Tests](https://img.shields.io/badge/tests-56%20passed-brightgreen.svg)](#development-and-verification)
 [![CI](https://img.shields.io/badge/CI-GitHub%20Actions-success.svg)](https://github.com/MaithreshVaddi-27/Resume_Crew/actions)
 
@@ -18,7 +17,7 @@
 It ships two ways to use it:
 
 - **CLI** (`resume-crew`) — scriptable, good for batch/automation work
-- **Gradio web UI** (`resume-crew-ui`) — point-and-click, with optional public sharing via ngrok
+- **Gradio web UI** (`resume-crew-ui`) — point-and-click, with optional authenticated Gradio sharing
 
 Supports **PDF, DOCX, TXT, and Markdown** inputs.
 
@@ -85,7 +84,7 @@ You only need this if you want to use `--provider gemini`. If you are using MLX-
 
 Treat this key like a password: never commit it to Git, share it in chat, or paste it into client-side code. `.env` is already ignored by Git in this project.
 
-> Optional: if you need a **public URL** for the Gradio app, ngrok requires an authtoken and both app-login credentials. See [Authenticated public sharing](#authenticated-public-sharing) for setup and privacy requirements.
+> Optional: enable Gradio's built-in public tunnel with `GRADIO_SHARE=true` and configure both app-login credentials. See [Authenticated public sharing](#authenticated-public-sharing) for setup and privacy requirements.
 
 ## Installation
 
@@ -244,14 +243,9 @@ CREWAI_DISABLE_TRACKING=true
 OTEL_SDK_DISABLED=true
 
 GRADIO_PORT=7860
-GRADIO_SHARE=false        # true = use Gradio's built-in tunnel instead of ngrok
+GRADIO_SHARE=false        # true = use Gradio's built-in public tunnel
 
-# Optional: for a live public URL. Get a free token at
-# https://dashboard.ngrok.com/get-started/your-authtoken
-NGROK_AUTHTOKEN=
-
-# Recommended if you use NGROK_AUTHTOKEN or GRADIO_SHARE — a public URL has
-# no login by default, so set both to require a username/password.
+# Required together when GRADIO_SHARE=true.
 GRADIO_AUTH_USER=replace_with_a_username
 GRADIO_AUTH_PASS=replace_with_a_strong_password
 ```
@@ -345,20 +339,19 @@ The UI opens automatically at `http://localhost:7860`. Expand **Analysis setting
 
 ### Authenticated public sharing
 
-Public tunnels expose the app to anyone who can reach the URL. Resume files, notes, and generated reports may contain sensitive personal information. Resume Crew therefore refuses to start ngrok or Gradio sharing unless both credentials are set.
+Public sharing exposes the app to anyone who can reach its URL. Resume files, notes, and generated reports may contain sensitive personal information. Resume Crew requires both credentials before enabling Gradio sharing.
 
-1. For ngrok, get an authtoken at [dashboard.ngrok.com](https://dashboard.ngrok.com/get-started/your-authtoken).
-2. Add the tunnel option and credentials to `.env`:
+1. Set the share flag and credentials in `.env`:
 
    ```env
-   NGROK_AUTHTOKEN=your_token_here
+   GRADIO_SHARE=true
    GRADIO_AUTH_USER=choose_a_username
    GRADIO_AUTH_PASS=replace_with_a_strong_password
    ```
 
-3. Run `resume-crew-ui`. The URL prints in the terminal after tunnel setup. Keep it and the credentials private; use a unique, strong password.
+2. Run `resume-crew-ui`. Keep the URL and credentials private; use a unique, strong password.
 
-To use Gradio's built-in tunnel instead, set `GRADIO_SHARE=true` and keep both auth values configured. To run locally only, leave `GRADIO_SHARE=false` and `NGROK_AUTHTOKEN` empty.
+To run locally only, set `GRADIO_SHARE=false`.
 
 ### Port and share settings
 
@@ -405,7 +398,7 @@ CrewAI execution traces and telemetry are disabled by default, both in `.env.exa
 | Input exceeds character limit | Split the document or remove irrelevant appendices. |
 | PowerShell will not activate venv | Use the temporary execution-policy command in the [Windows installation](#windows-powershell) section. |
 | Slow local analysis | Run `resume-crew --check-hardware`; reduce Ollama context or use a smaller local model. |
-| ngrok tunnel not created | Ensure `pyngrok` is installed (`pip install pyngrok`) and `NGROK_AUTHTOKEN` is set in `.env`. |
+| Gradio share fails to start | Confirm `GRADIO_SHARE=true` and set both `GRADIO_AUTH_USER` and `GRADIO_AUTH_PASS` in `.env`. |
 | Gradio port already in use | Set `GRADIO_PORT=7861` (or any free port) in `.env`. |
 | `resume-crew-ui` fails with `DLL load failed... Application Control policy has blocked this file` (Windows) | A managed/corporate Windows security policy (WDAC/AppLocker) is blocking a native DLL — usually pandas, pulled in by Gradio — often because the project folder still has the "downloaded from the internet" flag. In PowerShell from the project root: `Get-ChildItem -Path .\venv -Recurse \| Unblock-File`, then retry. If it still fails, move the project out of `Downloads` to a plain local folder (e.g. `C:\Resume Crew`), delete `venv`, and reinstall. On a company-managed device the policy may be enforced centrally — ask IT to allow Python/pandas, or run the project inside WSL2 instead. |
 
@@ -434,7 +427,7 @@ This project is licensed under the MIT License — see [LICENSE](https://github.
 It ships two ways to use it:
 
 - **CLI** (`resume-crew`) — scriptable, good for batch/automation work
-- **Gradio web UI** (`resume-crew-ui`) — point-and-click, with optional public sharing via ngrok
+- **Gradio web UI** (`resume-crew-ui`) — point-and-click, with optional authenticated Gradio sharing
 
 Supports **PDF, DOCX, TXT, and Markdown** inputs.
 
@@ -501,7 +494,7 @@ You only need this if you want to use `--provider gemini`. If you are using MLX-
 
 Treat this key like a password: never commit it to Git, share it in chat, or paste it into client-side code. `.env` is already ignored by Git in this project.
 
-> Optional: if you need a **public URL** for the Gradio app, ngrok requires an authtoken and both app-login credentials. See [Authenticated public sharing](#authenticated-public-sharing) for setup and privacy requirements.
+> Optional: enable Gradio's built-in public tunnel with `GRADIO_SHARE=true` and configure both app-login credentials. See [Authenticated public sharing](#authenticated-public-sharing) for setup and privacy requirements.
 
 ## Installation
 
@@ -660,14 +653,9 @@ CREWAI_DISABLE_TRACKING=true
 OTEL_SDK_DISABLED=true
 
 GRADIO_PORT=7860
-GRADIO_SHARE=false        # true = use Gradio's built-in tunnel instead of ngrok
+GRADIO_SHARE=false        # true = use Gradio's built-in public tunnel
 
-# Optional: for a live public URL. Get a free token at
-# https://dashboard.ngrok.com/get-started/your-authtoken
-NGROK_AUTHTOKEN=your_ngrok_authtoken
-
-# Recommended if you use NGROK_AUTHTOKEN or GRADIO_SHARE — a public URL has
-# no login by default, so set both to require a username/password.
+# Required together when GRADIO_SHARE=true.
 GRADIO_AUTH_USER=replace_with_a_username
 GRADIO_AUTH_PASS=replace_with_a_strong_password
 ```
@@ -761,20 +749,19 @@ The UI opens automatically at `http://localhost:7860`. Expand **Analysis setting
 
 ### Authenticated public sharing
 
-Public tunnels expose the app to anyone who can reach the URL. Resume files, notes, and generated reports may contain sensitive personal information. Resume Crew therefore refuses to start ngrok or Gradio sharing unless both credentials are set.
+Public sharing exposes the app to anyone who can reach its URL. Resume files, notes, and generated reports may contain sensitive personal information. Resume Crew requires both credentials before enabling Gradio sharing.
 
-1. For ngrok, get an authtoken at [dashboard.ngrok.com](https://dashboard.ngrok.com/get-started/your-authtoken).
-2. Add the tunnel option and credentials to `.env`:
+1. Set the share flag and credentials in `.env`:
 
    ```env
-   NGROK_AUTHTOKEN=your_token_here
+   GRADIO_SHARE=true
    GRADIO_AUTH_USER=choose_a_username
    GRADIO_AUTH_PASS=replace_with_a_strong_password
    ```
 
-3. Run `resume-crew-ui`. The URL prints in the terminal after tunnel setup. Keep it and the credentials private; use a unique, strong password.
+2. Run `resume-crew-ui`. Keep the URL and credentials private; use a unique, strong password.
 
-To use Gradio's built-in tunnel instead, set `GRADIO_SHARE=true` and keep both auth values configured. To run locally only, leave `GRADIO_SHARE=false` and `NGROK_AUTHTOKEN` empty.
+To run locally only, set `GRADIO_SHARE=false`.
 
 ### Port and share settings
 
@@ -821,7 +808,7 @@ CrewAI execution traces and telemetry are disabled by default, both in `.env.exa
 | Input exceeds character limit | Split the document or remove irrelevant appendices. |
 | PowerShell will not activate venv | Use the temporary execution-policy command in the [Windows installation](#windows-powershell) section. |
 | Slow local analysis | Run `resume-crew --check-hardware`; reduce Ollama context or use a smaller local model. |
-| ngrok tunnel not created | Ensure `pyngrok` is installed (`pip install pyngrok`) and `NGROK_AUTHTOKEN` is set in `.env`. |
+| Gradio share fails to start | Confirm `GRADIO_SHARE=true` and set both `GRADIO_AUTH_USER` and `GRADIO_AUTH_PASS` in `.env`. |
 | Gradio port already in use | Set `GRADIO_PORT=7861` (or any free port) in `.env`. |
 | `resume-crew-ui` fails with `DLL load failed... Application Control policy has blocked this file` (Windows) | A managed/corporate Windows security policy (WDAC/AppLocker) is blocking a native DLL — usually pandas, pulled in by Gradio — often because the project folder still has the "downloaded from the internet" flag. In PowerShell from the project root: `Get-ChildItem -Path .\venv -Recurse \| Unblock-File`, then retry. If it still fails, move the project out of `Downloads` to a plain local folder (e.g. `C:\Resume Crew`), delete `venv`, and reinstall. On a company-managed device the policy may be enforced centrally — ask IT to allow Python/pandas, or run the project inside WSL2 instead. |
 
